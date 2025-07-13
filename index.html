@@ -170,7 +170,7 @@
             gap: 12px; /* Increased gap */
             margin-top: 25px;
         }
-        .add-row-btn, .remove-row-btn, .save-btn, .export-btn, .print-btn, .recurring-btn {
+        .add-row-btn, .remove-row-btn, .export-btn, .print-btn, .clear-all-btn {
             background-color: #8B5CF6; /* Purple for primary actions */
             color: white;
             padding: 12px 20px; /* Larger padding */
@@ -182,7 +182,7 @@
             transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        .add-row-btn:hover, .save-btn:hover, .export-btn:hover, .print-btn:hover, .recurring-btn:hover {
+        .add-row-btn:hover, .export-btn:hover, .print-btn:hover, .clear-all-btn:hover {
             background-color: #7C3AED; /* Slightly darker purple on hover */
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
@@ -198,6 +198,12 @@
             background-color: #DC2626;
             transform: translateY(-1px);
             box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+        }
+        .clear-all-btn {
+            background-color: #EF4444; /* Red for destructive action */
+        }
+        .clear-all-btn:hover {
+            background-color: #DC2626;
         }
         /* Summary items */
         .summary-item {
@@ -334,7 +340,7 @@
                 flex-direction: column;
                 align-items: stretch;
             }
-            .add-row-btn, .remove-row-btn, .save-btn, .export-btn, .print-btn, .recurring-btn {
+            .add-row-btn, .remove-row-btn, .export-btn, .print-btn, .clear-all-btn {
                 padding: 10px 15px;
                 font-size: 15px;
             }
@@ -366,7 +372,7 @@
                 margin: 0;
                 padding: 0;
             }
-            .action-buttons, .remove-row-btn, .input-group input, .input-group select {
+            .action-buttons, .remove-row-btn, .input-group input, .input-group select, .clear-all-btn {
                 display: none;
             }
             .spending-table input[type="text"], .spending-table input[type="number"], .spending-table select {
@@ -428,9 +434,7 @@
                     <tr>
                         <th>Category</th>
                         <th>Actual Spend (£)</th>
-                        <th>Status</th>
                         <th>Type</th>
-                        <th>Recurring</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -440,23 +444,13 @@
             </table>
             <div class="action-buttons">
                 <button id="addRowBtn" class="add-row-btn">Add New Category</button>
-                <button id="addRecurringBtn" class="recurring-btn">Add Recurring Expenses</button>
-                <button id="saveDataBtn" class="save-btn">Save Current Month</button>
                 <button id="exportCsvBtn" class="export-btn">Export to CSV</button>
                 <button id="printBtn" class="print-btn">Print Budget</button>
+                <button id="clearAllDataBtn" class="clear-all-btn">Clear All Data</button>
             </div>
         </div>
 
-        <div class="section-card">
-            <h2>Historical Data</h2>
-            <div class="input-group">
-                <label for="monthSelect">Select Month to View:</label>
-                <select id="monthSelect" class="rounded-md p-2 border border-gray-300"></select>
-            </div>
-            <button id="loadMonthBtn" class="save-btn">Load Selected Month</button>
-        </div>
-
-        <!-- Removed Savings Goals Section -->
+        <!-- Historical Data Section Removed -->
 
         <div class="section-card">
             <h2>Visual Spending Breakdown</h2>
@@ -510,24 +504,17 @@
         const totalAllocatedSpan = document.getElementById('totalAllocated');
         const spendingTableBody = document.querySelector('#spendingTable tbody');
         const addRowBtn = document.getElementById('addRowBtn');
-        const addRecurringBtn = document.getElementById('addRecurringBtn'); // New button
-        const saveDataBtn = document.getElementById('saveDataBtn');
         const exportCsvBtn = document.getElementById('exportCsvBtn');
-        const printBtn = document.getElementById('printBtn'); // New print button
+        const printBtn = document.getElementById('printBtn');
+        const clearAllDataBtn = document.getElementById('clearAllDataBtn');
         const totalActualSpendingSpan = document.getElementById('totalActualSpending');
         const balanceStatusSpan = document.getElementById('balanceStatus');
         const needsStatusSpan = document.getElementById('needsStatus');
         const wantsStatusSpan = document.getElementById('wantsStatus');
         const savingsDebtStatusSpan = document.getElementById('savingsDebtStatus');
-        const alertMessageDiv = document.getElementById('alertMessage'); // New alert div
-        const monthSelect = document.getElementById('monthSelect'); // Historical data select
-        const loadMonthBtn = document.getElementById('loadMonthBtn'); // Load historical button
-        // const savingsGoalsContainer = document.getElementById('savingsGoalsContainer'); // Savings goals container - REMOVED
-        // const addGoalBtn = document.getElementById('addGoalBtn'); // Add goal button - REMOVED
+        const alertMessageDiv = document.getElementById('alertMessage');
 
         let spendingCategories = []; // Will be loaded from localStorage or default
-        let historicalBudgets = {}; // Stores monthly snapshots
-        // let savingsGoals = []; // Stores savings goals - REMOVED
 
         let spendingChart; // Chart.js instance
 
@@ -567,7 +554,6 @@
             spendingCategories.forEach((item, index) => {
                 const row = spendingTableBody.insertRow();
                 const typeSelectId = `type-select-${index}`; // Unique ID for type select
-                // const goalSelectId = `goal-select-${index}`; // Unique ID for goal select - REMOVED
 
                 // Options for the Type dropdown
                 const typeOptionsHtml = `
@@ -576,26 +562,13 @@
                     <option value="savingsDebt" ${item.type === 'savingsDebt' ? 'selected' : ''}>Savings/Debt</option>
                 `;
 
-                // Options for the Goal dropdown (only if type is savingsDebt) - REMOVED
-                // let goalOptionsHtml = '<option value="">-- No Goal --</option>';
-                // if (savingsGoals.length > 0) {
-                //     goalOptionsHtml += savingsGoals.map(goal =>
-                //         `<option value="${goal.id}" ${item.linkedGoalId === goal.id ? 'selected' : ''}>${goal.name}</option>`
-                //     ).join('');
-                // }
-
                 row.innerHTML = `
                     <td><input type="text" value="${item.category}" data-index="${index}" data-field="category" class="rounded-md"></td>
-                    <td><input type="number" value="${item.amount}" min="0" step="0.01" data-index="${index}" data-field="amount" class="rounded-md"></td>
-                    <td id="status-${index}"></td>
+                    <td><input type="text" value="${item.amount}" data-index="${index}" data-field="amount" class="rounded-md"></td>
                     <td>
                         <select id="${typeSelectId}" data-index="${index}" data-field="type" class="rounded-md p-2 border border-gray-300 mb-2">
                             ${typeOptionsHtml}
                         </select>
-                        <!-- Removed Savings Goal Link Dropdown -->
-                    </td>
-                    <td>
-                        <input type="checkbox" data-index="${index}" data-field="recurring" ${item.recurring ? 'checked' : ''}>
                     </td>
                     <td>
                         <button class="remove-row-btn rounded-md" data-index="${index}">Remove</button>
@@ -605,24 +578,7 @@
                 // Add event listeners for the dynamically created selects
                 row.querySelector(`#${typeSelectId}`).addEventListener('change', (e) => {
                     updateSpendingData(index, 'type', e.target.value);
-                    // Show/hide goal link dropdown based on type - REMOVED
-                    // const goalSelect = row.querySelector(`#${goalSelectId}`);
-                    // if (e.target.value === 'savingsDebt') {
-                    //     goalSelect.classList.remove('hidden');
-                    // } else {
-                    //     goalSelect.classList.add('hidden');
-                    //     // If type changes from savingsDebt, unlink the goal
-                    //     if (item.linkedGoalId) {
-                    //         item.linkedGoalId = null; // Clear linked goal
-                    //         recalculateSavingsGoals(); // Recalculate goals
-                    //     }
-                    // }
                 });
-
-                // Removed event listener for goal select
-                // row.querySelector(`#${goalSelectId}`).addEventListener('change', (e) => {
-                //     updateSpendingData(index, 'linkedGoalId', e.target.value || null); // Store null if no goal selected
-                // });
             });
             updateSummary(); // Update summary after rendering
         };
@@ -630,57 +586,27 @@
         // Function to update spending category data
         const updateSpendingData = (index, field, value) => {
             if (field === 'amount') {
+                // Attempt to parse the value as a float, default to 0 if not a valid number
                 spendingCategories[index][field] = parseFloat(value) || 0;
-            } else if (field === 'recurring') {
-                spendingCategories[index][field] = value; // Checkbox value is boolean
-            } else if (field === 'linkedGoalId') { // This field is now effectively removed but kept for safety if old data has it
-                 spendingCategories[index][field] = null; // Always set to null
-            }
-            else {
+            } else {
                 spendingCategories[index][field] = value;
             }
             updateSummary();
-            // recalculateSavingsGoals(); // Recalculate goals after any relevant spending change - REMOVED
             saveCurrentState(); // Save data after every change
         };
 
         // Function to add a new spending category row
         const addSpendingCategoryRow = () => {
-            spendingCategories.push({ category: '', amount: 0, type: 'wants', recurring: false, linkedGoalId: null });
+            // Removed 'recurring' and 'linkedGoalId' from new category
+            spendingCategories.push({ category: '', amount: 0, type: 'wants' });
             renderSpendingCategories();
             saveCurrentState();
-        };
-
-        // Function to add recurring expenses for the current month
-        const addRecurringExpenses = () => {
-            const currentCategories = new Set(spendingCategories.map(c => c.category.toLowerCase()));
-            let addedCount = 0;
-            const newRecurring = [];
-
-            // Filter out recurring items that are NOT already in the current list
-            const recurringItemsFromLocalStorage = JSON.parse(localStorage.getItem('recurringExpenses')) || [];
-            recurringItemsFromLocalStorage.forEach(item => {
-                if (!currentCategories.has(item.category.toLowerCase())) {
-                    newRecurring.push({ ...item, amount: 0, linkedGoalId: null }); // Ensure linkedGoalId is null
-                    addedCount++;
-                }
-            });
-
-            if (addedCount > 0) {
-                spendingCategories.push(...newRecurring);
-                renderSpendingCategories();
-                saveCurrentState();
-                showAlert(`${addedCount} recurring expense(s) added. Please fill in the amounts.`, 'success');
-            } else {
-                showAlert('No new recurring expenses to add or all are already present.', 'info');
-            }
         };
 
         // Function to remove a spending category row
         const removeSpendingCategoryRow = (indexToRemove) => {
             spendingCategories.splice(indexToRemove, 1);
             renderSpendingCategories(); // Re-render to update indices
-            // recalculateSavingsGoals(); // Recalculate goals after removing a spending item - REMOVED
             saveCurrentState();
         };
 
@@ -769,14 +695,8 @@
             updateCategoryStatus(wants, actualWants, wantsStatusSpan, false); // Not savings
             updateCategoryStatus(savingsDebt, actualSavingsDebt, savingsDebtStatusSpan, true); // Is savings
 
-            // Update individual item status (overspend/underspend)
-            spendingCategories.forEach((item, index) => {
-                const statusCell = document.getElementById(`status-${index}`);
-                if (statusCell) {
-                    statusCell.textContent = ''; // Clear individual item status for now to avoid confusion
-                }
-            });
-
+            // Removed logic to update individual item status (overspend/underspend) as the column is removed.
+        
             // Update Chart
             if (spendingChart) {
                 spendingChart.data.labels = chartLabels;
@@ -834,14 +754,11 @@
                     }
                 });
             }
-            // updateSavingsGoalsDisplay() is now called by recalculateSavingsGoals - REMOVED
         };
 
         // --- Local Storage Functions ---
         const LOCAL_STORAGE_KEY = 'budgetPlannerDataV2'; // Versioned key for future updates
-        const RECURRING_EXPENSES_KEY = 'recurringExpenses';
-        const HISTORICAL_BUDGETS_KEY = 'historicalBudgets';
-        // const SAVINGS_GOALS_KEY = 'savingsGoals'; // REMOVED
+        // Removed RECURRING_EXPENSES_KEY and HISTORICAL_BUDGETS_KEY
 
         const saveCurrentState = () => {
             const dataToSave = {
@@ -851,10 +768,7 @@
             };
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
             console.log('Current budget data saved to local storage.');
-
-            // Also save recurring items separately
-            const recurringItems = spendingCategories.filter(item => item.recurring);
-            localStorage.setItem(RECURRING_EXPENSES_KEY, JSON.stringify(recurringItems));
+            // Removed saving recurring items separately
         };
 
         const loadCurrentState = () => {
@@ -864,254 +778,62 @@
                 grossPayInput.value = parsedData.grossPay || '';
                 takeHomePayInput.value = parsedData.takeHomePay || '';
                 spendingCategories = parsedData.spendingCategories || [];
-                // Ensure recurring and linkedGoalId properties exist for older saved data
+                // Ensure properties exist for older saved data and remove 'recurring' and 'linkedGoalId'
                 spendingCategories.forEach(item => {
-                    if (typeof item.recurring === 'undefined') {
-                        item.recurring = false;
-                    }
-                    if (typeof item.linkedGoalId === 'undefined') {
-                        item.linkedGoalId = null; // Ensure linkedGoalId is null as feature is removed
-                    }
+                    delete item.recurring; // Remove recurring property
+                    delete item.linkedGoalId; // Remove linkedGoalId property
                 });
                 console.log('Current budget data loaded from local storage.');
             } else {
-                // Default categories if no data found
+                // Default categories if no data found (removed recurring and linkedGoalId)
                 spendingCategories = [
-                    { category: 'Rent/Mortgage', amount: 0, type: 'needs', recurring: true, linkedGoalId: null },
-                    { category: 'Utilities', amount: 0, type: 'needs', recurring: true, linkedGoalId: null },
-                    { category: 'Groceries', amount: 0, type: 'needs', recurring: false, linkedGoalId: null },
-                    { category: 'Transport', amount: 0, type: 'needs', recurring: false, linkedGoalId: null },
-                    { category: 'Phone/Internet', amount: 0, type: 'needs', recurring: true, linkedGoalId: null },
-                    { category: 'Eating Out', amount: 0, type: 'wants', recurring: false, linkedGoalId: null },
-                    { category: 'Entertainment', amount: 0, type: 'wants', recurring: false, linkedGoalId: null },
-                    { category: 'Shopping', amount: 0, type: 'wants', recurring: false, linkedGoalId: null },
-                    { category: 'Hobbies', amount: 0, type: 'wants', recurring: false, linkedGoalId: null },
-                    { category: 'Savings', amount: 0, type: 'savingsDebt', recurring: false, linkedGoalId: null },
-                    { category: 'Debt Repayment', amount: 0, type: 'savingsDebt', recurring: false, linkedGoalId: null }
+                    { category: 'Rent/Mortgage', amount: 0, type: 'needs' },
+                    { category: 'Utilities', amount: 0, type: 'needs' },
+                    { category: 'Groceries', amount: 0, type: 'needs' },
+                    { category: 'Transport', amount: 0, type: 'needs' },
+                    { category: 'Phone/Internet', amount: 0, type: 'needs' },
+                    { category: 'Eating Out', amount: 0, type: 'wants' },
+                    { category: 'Entertainment', amount: 0, type: 'wants' },
+                    { category: 'Shopping', amount: 0, type: 'wants' },
+                    { category: 'Hobbies', amount: 0, type: 'wants' },
+                    { category: 'Savings', amount: 0, type: 'savingsDebt' },
+                    { category: 'Debt Repayment', amount: 0, type: 'savingsDebt' }
                 ];
             }
         };
 
-        const saveHistoricalMonth = () => {
-            const currentMonthYear = new Date().toLocaleString('en-GB', { month: 'long', year: 'numeric' });
-            historicalBudgets[currentMonthYear] = {
-                grossPay: grossPayInput.value,
-                takeHomePay: takeHomePayInput.value,
-                spendingCategories: JSON.parse(JSON.stringify(spendingCategories)) // Deep copy
-            };
-            localStorage.setItem(HISTORICAL_BUDGETS_KEY, JSON.stringify(historicalBudgets));
-            updateMonthSelect();
-            showAlert(`Budget for ${currentMonthYear} saved!`, 'success');
-        };
+        // Removed saveHistoricalMonth, loadHistoricalData, updateMonthSelect, applyHistoricalData functions
 
-        const loadHistoricalData = () => {
-            const savedHistorical = localStorage.getItem(HISTORICAL_BUDGETS_KEY);
-            if (savedHistorical) {
-                historicalBudgets = JSON.parse(savedHistorical);
-            }
-            updateMonthSelect();
-        };
+        // Function to clear all local storage data for the app
+        const clearAllData = () => {
+            const userConfirmed = window.confirm('Are you sure you want to clear ALL data? This action cannot be undone.');
 
-        const updateMonthSelect = () => {
-            monthSelect.innerHTML = '';
-            const sortedMonths = Object.keys(historicalBudgets).sort((a, b) => {
-                const dateA = new Date(a);
-                const dateB = new Date(b);
-                return dateB - dateA; // Newest first
-            });
-
-            if (sortedMonths.length === 0) {
-                const option = document.createElement('option');
-                option.value = '';
-                option.textContent = 'No saved months';
-                monthSelect.appendChild(option);
-                loadMonthBtn.disabled = true;
-            } else {
-                loadMonthBtn.disabled = false;
-                sortedMonths.forEach(month => {
-                    const option = document.createElement('option');
-                    option.value = month;
-                    option.textContent = month;
-                    monthSelect.appendChild(option);
-                });
-            }
-        };
-
-        const applyHistoricalData = () => {
-            const selectedMonth = monthSelect.value;
-            if (selectedMonth && historicalBudgets[selectedMonth]) {
-                const data = historicalBudgets[selectedMonth];
-                grossPayInput.value = data.grossPay;
-                takeHomePayInput.value = data.takeHomePay;
-                spendingCategories = JSON.parse(JSON.stringify(data.spendingCategories)); // Deep copy
+            if (userConfirmed) {
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+                // Removed clearing of RECURRING_EXPENSES_KEY and HISTORICAL_BUDGETS_KEY
+                // Reset application state to default
+                grossPayInput.value = '';
+                takeHomePayInput.value = '';
+                spendingCategories = [
+                    { category: 'Rent/Mortgage', amount: 0, type: 'needs' },
+                    { category: 'Utilities', amount: 0, type: 'needs' },
+                    { category: 'Groceries', amount: 0, type: 'needs' },
+                    { category: 'Transport', amount: 0, type: 'needs' },
+                    { category: 'Phone/Internet', amount: 0, type: 'needs' },
+                    { category: 'Eating Out', amount: 0, type: 'wants' },
+                    { category: 'Entertainment', amount: 0, type: 'wants' },
+                    { category: 'Shopping', amount: 0, type: 'wants' },
+                    { category: 'Hobbies', amount: 0, type: 'wants' },
+                    { category: 'Savings', amount: 0, type: 'savingsDebt' },
+                    { category: 'Debt Repayment', amount: 0, type: 'savingsDebt' }
+                ];
+                // Removed historicalBudgets reset
                 renderSpendingCategories();
                 updateSummary();
-                // recalculateSavingsGoals(); // Recalculate goals after loading historical data - REMOVED
-                showAlert(`Loaded budget for ${selectedMonth}.`, 'info');
-            } else {
-                showAlert('Please select a month to load.', 'warning');
+                // Removed updateMonthSelect call
+                showAlert('All data has been cleared!', 'success');
             }
         };
-
-        // --- Savings Goals Functions --- REMOVED
-        // const saveGoals = () => {
-        //     localStorage.setItem(SAVINGS_GOALS_KEY, JSON.stringify(savingsGoals));
-        //     console.log('Savings goals saved.');
-        // };
-
-        // const loadGoals = () => {
-        //     const savedGoals = localStorage.getItem(SAVINGS_GOALS_KEY);
-        //     if (savedGoals) {
-        //         savingsGoals = JSON.parse(savedGoals);
-        //         // Ensure unique IDs and new properties for older goals if they don't have them
-        //         savingsGoals.forEach(goal => {
-        //             if (!goal.id) {
-        //                 goal.id = Date.now().toString() + Math.random().toString(36).substring(2, 9); // Add a unique ID
-        //             }
-        //             if (typeof goal.manualContribution === 'undefined') {
-        //                 goal.manualContribution = goal.currentAmount || 0; // Migrate old currentAmount to manualContribution
-        //             }
-        //             if (typeof goal.actualAchieved === 'undefined') {
-        //                 goal.actualAchieved = 0; // Will be calculated by recalculateSavingsGoals
-        //             }
-        //             // Remove old 'currentAmount' if it exists to avoid confusion
-        //             delete goal.currentAmount;
-        //         });
-        //     }
-        // };
-
-        // // Function to update a single goal's display (progress bar and text) without re-rendering the whole container
-        // const updateSingleGoalDisplay = (goalId) => {
-        //     const goalIndex = savingsGoals.findIndex(g => g.id === goalId);
-        //     if (goalIndex === -1) return;
-
-        //     const goal = savingsGoals[goalIndex];
-        //     const goalDiv = document.getElementById(`goal-div-${goal.id}`); // Use unique ID for div
-        //     if (goalDiv) {
-        //         const actualAchieved = parseFloat(goal.actualAchieved) || 0;
-        //         const targetAmount = parseFloat(goal.targetAmount) || 0;
-        //         const progressPercentage = targetAmount > 0 ? (actualAchieved / targetAmount) * 100 : 0;
-
-        //         const progressBar = goalDiv.querySelector('.progress-bar');
-        //         const progressText = goalDiv.querySelector('.progress-text');
-        //         const manualContributionInput = goalDiv.querySelector('input[data-field="manualContribution"]');
-
-
-        //         if (progressBar) {
-        //             progressBar.style.width = `${progressPercentage > 100 ? 100 : progressPercentage}%`;
-        //             progressBar.textContent = `${progressPercentage.toFixed(0)}%`;
-        //         }
-        //         if (progressText) {
-        //             progressText.textContent = `${formatCurrency(actualAchieved)} / ${formatCurrency(targetAmount)}`;
-        //         }
-        //         if (manualContributionInput) {
-        //             manualContributionInput.value = goal.manualContribution.toFixed(2); // Keep input value updated
-        //         }
-        //     }
-        // };
-
-
-        // const renderSavingsGoals = () => {
-        //     savingsGoalsContainer.innerHTML = '';
-        //     if (savingsGoals.length === 0) {
-        //         savingsGoalsContainer.innerHTML = '<p class="text-gray-500 text-center">No savings goals added yet. Click "Add New Goal" to get started!</p>';
-        //     }
-        //     savingsGoals.forEach((goal) => {
-        //         const goalDiv = document.createElement('div');
-        //         goalDiv.className = 'mb-4 p-4 border border-gray-200 rounded-lg bg-white shadow-sm';
-        //         goalDiv.id = `goal-div-${goal.id}`; // Unique ID for the goal's container div
-
-        //         const actualAchieved = parseFloat(goal.actualAchieved) || 0;
-        //         const targetAmount = parseFloat(goal.targetAmount) || 0;
-        //         const progressPercentage = targetAmount > 0 ? (actualAchieved / targetAmount) * 100 : 0;
-
-        //         goalDiv.innerHTML = `
-        //             <div class="flex justify-between items-center mb-3">
-        //                 <input type="text" value="${goal.name}" data-id="${goal.id}" data-field="name" placeholder="Goal Name" class="font-semibold text-lg rounded-md p-2 w-2/3 border border-gray-300">
-        //                 <button class="remove-goal-btn text-red-500 hover:text-red-700 text-sm p-2 rounded-md" data-id="${goal.id}">Remove</button>
-        //             </div>
-        //             <div class="input-group flex gap-3">
-        //                 <label class="w-1/2 text-sm text-gray-600">Manual Contribution (£): <input type="number" value="${goal.manualContribution}" min="0" step="0.01" data-id="${goal.id}" data-field="manualContribution" class="rounded-md"></label>
-        //                 <label class="w-1/2 text-sm text-gray-600">Target (£): <input type="number" value="${targetAmount}" min="0" step="0.01" data-id="${goal.id}" data-field="targetAmount" class="rounded-md"></label>
-        //             </div>
-        //             <div class="progress-bar-container">
-        //                 <div class="progress-bar" style="width: ${progressPercentage > 100 ? 100 : progressPercentage}%;">
-        //                     ${progressPercentage.toFixed(0)}%
-        //                 </div>
-        //             </div>
-        //             <div class="progress-text">
-        //                 ${formatCurrency(actualAchieved)} / ${formatCurrency(targetAmount)}
-        //             </div>
-        //         `;
-        //         savingsGoalsContainer.appendChild(goalDiv);
-        //     });
-        //     // After rendering goals, re-render spending categories to update goal dropdowns
-        //     renderSpendingCategories();
-        // };
-
-        // const addSavingsGoal = () => {
-        //     // Generate a more robust unique ID for the goal
-        //     const newGoalId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
-        //     savingsGoals.push({ id: newGoalId, name: 'New Goal', manualContribution: 0, targetAmount: 0, actualAchieved: 0 });
-        //     renderSavingsGoals(); // Re-render all goals to add the new one and update spending category dropdowns
-        //     saveGoals();
-        // };
-
-        // const updateSavingsGoalData = (goalId, field, value) => {
-        //     const goalIndex = savingsGoals.findIndex(g => g.id === goalId);
-        //     if (goalIndex === -1) return;
-
-        //     if (field === 'manualContribution' || field === 'targetAmount') {
-        //         savingsGoals[goalIndex][field] = parseFloat(value) || 0;
-        //     } else { // For 'name' field
-        //         savingsGoals[goalIndex][field] = value;
-        //     }
-        //     recalculateSavingsGoals(); // Recalculate all goals after any change to a goal
-        //     saveGoals();
-        // };
-
-        // const removeSavingsGoal = (goalIdToRemove) => {
-        //     // Find the index of the goal to remove
-        //     const indexToRemove = savingsGoals.findIndex(g => g.id === goalIdToRemove);
-        //     if (indexToRemove === -1) return;
-
-        //     // Remove the goal
-        //     savingsGoals.splice(indexToRemove, 1);
-
-        //     // Unlink any spending categories that were linked to this goal
-        //     spendingCategories.forEach(item => {
-        //         if (item.linkedGoalId === goalIdToRemove) {
-        //             item.linkedGoalId = null;
-        //         }
-        //     });
-
-        //     renderSavingsGoals(); // Full re-render needed after removal to update indices and dropdowns
-        //     recalculateSavingsGoals(); // Recalculate all goals as a linked one might have been removed
-        //     saveGoals();
-        //     saveCurrentState(); // Save spending categories after unlinking
-        // };
-
-        // // This function calculates the actual achieved amount for all goals based on manual contribution and linked spending
-        // const recalculateSavingsGoals = () => {
-        //     // First, reset all actualAchieved amounts to their manual contribution
-        //     savingsGoals.forEach(goal => {
-        //         goal.actualAchieved = parseFloat(goal.manualContribution) || 0;
-        //     });
-
-        //     // Then, sum up contributions from spending categories
-        //     spendingCategories.forEach(item => {
-        //         if (item.type === 'savingsDebt' && item.linkedGoalId) {
-        //             const goal = savingsGoals.find(g => g.id === item.linkedGoalId);
-        //             if (goal) {
-        //                 goal.actualAchieved += (parseFloat(item.amount) || 0);
-        //             }
-        //         }
-        //     });
-
-        //     // Update the display for each goal individually
-        //     savingsGoals.forEach(goal => updateSingleGoalDisplay(goal.id));
-        //     saveGoals(); // Save the updated goals
-        // };
 
 
         // --- Export to CSV Function ---
@@ -1136,19 +858,11 @@
 
             // Add Spending Categories
             csvContent += "Spending Categories\n";
-            csvContent += "Category,Actual Spend,Type,Recurring\n"; // Removed Linked Goal ID
+            csvContent += "Category,Actual Spend,Type\n"; // Removed Recurring column
             spendingCategories.forEach(item => {
-                csvContent += `${item.category},${item.amount.toFixed(2)},${item.type},${item.recurring ? 'Yes' : 'No'}\n`;
+                csvContent += `${item.category},${item.amount.toFixed(2)},${item.type}\n`;
             });
             csvContent += "\n";
-
-            // Add Savings Goals - REMOVED
-            // csvContent += "Savings Goals\n";
-            // csvContent += "Goal ID,Goal Name,Manual Contribution,Target Amount,Actual Achieved\n"; // Updated headers
-            // savingsGoals.forEach(goal => {
-            //     csvContent += `${goal.id},${goal.name},${goal.manualContribution.toFixed(2)},${goal.targetAmount.toFixed(2)},${goal.actualAchieved.toFixed(2)}\n`;
-            // });
-            // csvContent += "\n";
 
             // Add Summary
             let totalActual = 0;
@@ -1177,12 +891,9 @@
         grossPayInput.addEventListener('input', saveCurrentState);
         takeHomePayInput.addEventListener('input', saveCurrentState);
         addRowBtn.addEventListener('click', addSpendingCategoryRow);
-        addRecurringBtn.addEventListener('click', addRecurringExpenses); // Recurring expenses button
-        saveDataBtn.addEventListener('click', saveHistoricalMonth); // Save current month button
         exportCsvBtn.addEventListener('click', exportToCsv);
-        printBtn.addEventListener('click', () => window.print()); // Print button
-        loadMonthBtn.addEventListener('click', applyHistoricalData); // Load historical data button
-        // addGoalBtn.addEventListener('click', addSavingsGoal); // Add goal button - REMOVED
+        printBtn.addEventListener('click', () => window.print());
+        clearAllDataBtn.addEventListener('click', clearAllData);
 
         // Event delegation for dynamically added spending rows
         spendingTableBody.addEventListener('input', (event) => {
@@ -1190,11 +901,7 @@
             const index = parseInt(target.dataset.index);
             const field = target.dataset.field;
             if (!isNaN(index) && field) {
-                if (target.type === 'checkbox') {
-                    updateSpendingData(index, field, target.checked);
-                } else {
-                    updateSpendingData(index, field, target.value);
-                }
+                updateSpendingData(index, field, target.value);
             }
         });
         spendingTableBody.addEventListener('change', (event) => { // For select elements
@@ -1216,58 +923,10 @@
             }
         });
 
-        // Event delegation for dynamically added savings goal inputs - REMOVED
-        // savingsGoalsContainer.addEventListener('input', (event) => {
-        //     const target = event.target;
-        //     const goalId = target.dataset.id;
-        //     const field = target.dataset.field;
-        //     if (goalId && field) {
-        //         // For 'name' field, update directly as it's a text input
-        //         if (field === 'name') {
-        //             const goalIndex = savingsGoals.findIndex(g => g.id === goalId);
-        //             if (goalIndex !== -1) {
-        //                 savingsGoals[goalIndex][field] = target.value;
-        //                 saveGoals();
-        //                 renderSpendingCategories(); // Re-render spending categories to update goal dropdowns
-        //             }
-        //         } else if (field === 'manualContribution' || field === 'targetAmount') {
-        //             // For manual contribution or target amount, update and then recalculate
-        //             updateSavingsGoalData(goalId, field, target.value);
-        //         }
-        //     }
-        // });
-
-        // savingsGoalsContainer.addEventListener('change', (event) => {
-        //     const target = event.target;
-        //     const goalId = target.dataset.id;
-        //     const field = target.dataset.field;
-        //     if (goalId && field) {
-        //         // Only update and re-render progress for amount fields on 'change'
-        //         if (field === 'manualContribution' || field === 'targetAmount') {
-        //             updateSavingsGoalData(goalId, field, target.value);
-        //         }
-        //     }
-        // });
-
-
-        // savingsGoalsContainer.addEventListener('click', (event) => {
-        //     const target = event.target;
-        //     if (target.classList.contains('remove-goal-btn')) {
-        //         const goalId = target.dataset.id;
-        //         if (goalId) {
-        //             removeSavingsGoal(goalId);
-        //         }
-        //     }
-        // });
-
         // Initial load and render
         loadCurrentState(); // Load current month's data
-        loadHistoricalData(); // Load historical months
-        // loadGoals(); // Load savings goals - REMOVED
         renderSpendingCategories(); // Render categories after loading
-        // renderSavingsGoals(); // Render savings goals - REMOVED
         updateSummary(); // Update summary and chart based on loaded data
-        // recalculateSavingsGoals(); // Initial recalculation of goals based on loaded spending data - REMOVED
     </script>
 </body>
 </html>
