@@ -510,6 +510,9 @@
         const renderSpendingCategories = () => {
             spendingTableBody.innerHTML = ''; // Clear existing rows
 
+            // Define the number of initial default categories
+            const numberOfDefaultCategories = 7;
+
             spendingCategories.forEach((item, index) => {
                 const row = spendingTableBody.insertRow();
                 const typeSelectId = `type-select-${index}`; // Unique ID for type select
@@ -524,23 +527,37 @@
                 // Determine the value for the amount input: empty string if 0, otherwise the actual amount
                 const amountValue = (item.amount === 0) ? '' : item.amount;
 
+                // Conditionally render the 'Type' column
+                let typeColumnHtml;
+                if (index < numberOfDefaultCategories) {
+                    // For default categories, show plain text
+                    typeColumnHtml = `<td data-label="Type" class="font-semibold text-gray-600">${item.type.charAt(0).toUpperCase() + item.type.slice(1)}</td>`;
+                } else {
+                    // For additional categories, show the select dropdown
+                    typeColumnHtml = `
+                        <td data-label="Type">
+                            <select id="${typeSelectId}" data-index="${index}" data-field="type" class="rounded-md p-2 border border-gray-300 mb-2">
+                                ${typeOptionsHtml}
+                            </select>
+                        </td>
+                    `;
+                }
+
                 row.innerHTML = `
                     <td data-label="Category"><input type="text" value="${item.category}" data-index="${index}" data-field="category" class="rounded-md"></td>
-                    <td data-label="Actual Spend (£)"><input type="text" value="${amountValue}" placeholder="0" data-index="${index}" data-field="amount" class="rounded-md"></td>
-                    <td data-label="Type">
-                        <select id="${typeSelectId}" data-index="${index}" data-field="type" class="rounded-md p-2 border border-gray-300 mb-2">
-                            ${typeOptionsHtml}
-                        </select>
-                    </td>
+                    <td data-label="Actual Spend (£)"><input type="number" value="${amountValue}" placeholder="0" data-index="${index}" data-field="amount" class="rounded-md"></td>
+                    ${typeColumnHtml}
                     <td data-label="Action">
                         <button class="remove-row-btn rounded-md" data-index="${index}"><i class="fas fa-trash-alt"></i></button>
                     </td>
                 `;
 
-                // Add event listeners for the dynamically created selects
-                row.querySelector(`#${typeSelectId}`).addEventListener('change', (e) => {
-                    updateSpendingData(index, 'type', e.target.value);
-                });
+                // Add event listeners for the dynamically created selects, only if they exist
+                if (index >= numberOfDefaultCategories) {
+                    row.querySelector(`#${typeSelectId}`).addEventListener('change', (e) => {
+                        updateSpendingData(index, 'type', e.target.value);
+                    });
+                }
             });
             updateSummary(); // Update summary after rendering
         };
