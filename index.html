@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js for visual spending breakdown -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* Base styles for a clean, modern look, inspired by the provided image */
         body {
@@ -170,7 +172,7 @@
             gap: 12px; /* Increased gap */
             margin-top: 25px;
         }
-        .add-row-btn, .remove-row-btn, .export-btn, .print-btn, .clear-all-btn {
+        .add-row-btn, .export-btn, .print-btn, .clear-all-btn {
             background-color: #8B5CF6; /* Purple for primary actions */
             color: white;
             padding: 12px 20px; /* Larger padding */
@@ -189,10 +191,16 @@
         }
         .remove-row-btn {
             background-color: #EF4444; /* Red for remove actions */
-            margin-left: 10px;
             padding: 8px 12px;
+            border-radius: 8px; /* Slightly less rounded than main buttons */
             font-size: 14px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex; /* Use flex to center icon */
+            justify-content: center;
+            align-items: center;
+            width: 36px; /* Fixed width for icon button */
+            height: 36px; /* Fixed height for icon button */
+            margin-left: auto; /* Push to right on desktop */
         }
         .remove-row-btn:hover {
             background-color: #DC2626;
@@ -246,38 +254,102 @@
         }
 
 
+        /* Chart container styling for bar chart */
+        .chart-container {
+            width: 100%;
+            max-width: 600px; /* Adjusted max-width for bar chart */
+            height: 300px; /* Set a fixed height for the bar chart */
+            margin: 25px auto;
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+            padding: 20px;
+            display: flex; /* Use flexbox to center content */
+            justify-content: center;
+            align-items: center;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 600px) {
             .container {
-                padding: 20px;
+                padding: 15px; /* Slightly less padding on very small screens */
             }
             h1 {
                 font-size: 2em;
+                margin-bottom: 20px;
             }
             h2 {
                 font-size: 1.5em;
+                margin-bottom: 20px;
             }
-            .spending-table th, .spending-table td {
-                padding: 10px;
-                font-size: 0.85em;
+            .input-group label {
+                font-size: 1em;
             }
             .input-group input[type="number"],
             .input-group input[type="text"],
             .input-group select {
-                padding: 10px 12px;
-                font-size: 15px;
+                padding: 12px 15px; /* Slightly smaller padding for inputs */
+                font-size: 16px;
             }
+
+            /* Table specific mobile styles */
+            .spending-table {
+                border-spacing: 0; /* Remove spacing between rows */
+            }
+            .spending-table thead {
+                display: none; /* Hide table headers on mobile */
+            }
+            .spending-table tbody tr {
+                display: block; /* Make each row a block element */
+                margin-bottom: 15px; /* Space between stacked rows */
+                border: 1px solid #E5E7EB;
+                padding: 10px;
+                border-radius: 10px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            }
+            .spending-table tbody tr:hover {
+                transform: none; /* Disable hover transform for mobile rows */
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            }
+            .spending-table tbody td {
+                display: block; /* Make each cell a block element */
+                text-align: right; /* Align content to the right */
+                padding: 8px 10px; /* Adjust cell padding */
+                position: relative;
+                border-bottom: 1px dashed #E5E7EB; /* Add dashed line between stacked cells */
+            }
+            .spending-table tbody td:last-child {
+                border-bottom: none; /* No border for the last cell in a row */
+            }
+            .spending-table input[type="text"],
+            .spending-table input[type="number"],
+            .spending-table select {
+                width: 100%; /* Full width for inputs within mobile cells */
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+
+            /* Adjust remove button for mobile */
+            .remove-row-btn {
+                margin-top: 10px; /* Space from other inputs in mobile row */
+                width: 32px; /* Smaller width for icon button */
+                height: 32px; /* Smaller height for icon button */
+                padding: 0; /* Remove padding */
+                font-size: 14px; /* Adjust icon size */
+                margin-left: 0; /* Remove auto margin */
+            }
+            .remove-row-btn i {
+                font-size: 14px; /* Explicit icon size */
+            }
+
             .action-buttons {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 10px;
             }
-            .add-row-btn, .remove-row-btn, .export-btn, .print-btn, .clear-all-btn {
+            .add-row-btn, .export-btn, .print-btn, .clear-all-btn {
                 padding: 10px 15px;
                 font-size: 15px;
-            }
-            .remove-row-btn {
-                margin-left: 0;
-                margin-top: 5px;
             }
             .summary-item {
                 font-size: 1em;
@@ -318,27 +390,11 @@
                 display: block !important;
             }
         }
-        /* Chart container styling for bar chart */
-        .chart-container {
-            width: 100%;
-            max-width: 600px; /* Adjusted max-width for bar chart */
-            height: 300px; /* Set a fixed height for the bar chart */
-            margin: 25px auto;
-            background-color: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
-            padding: 20px;
-            display: flex; /* Use flexbox to center content */
-            justify-content: center;
-            align-items: center;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Budget and Finance Planner</h1>
-
-        <!-- Removed alertMessageDiv as it's no longer needed -->
 
         <div class="section-card">
             <h2>Income Details</h2>
@@ -408,7 +464,7 @@
 
     <script>
         // Get DOM elements
-        const incomeInput = document.getElementById('incomeInput'); // Renamed from takeHomePayInput
+        const incomeInput = document.getElementById('incomeInput');
         const spendingTableBody = document.querySelector('#spendingTable tbody');
         const addRowBtn = document.getElementById('addRowBtn');
         const exportCsvBtn = document.getElementById('exportCsvBtn');
@@ -419,19 +475,16 @@
         const needsStatusSpan = document.getElementById('needsStatus');
         const wantsStatusSpan = document.getElementById('wantsStatus');
         const savingsDebtStatusSpan = document.getElementById('savingsDebtStatus');
-        // Removed alertMessageDiv as it's no longer needed
-        // const alertMessageDiv = document.getElementById('alertMessage');
 
-        // New DOM element references for the condensed summary
         const needsStatusDiv = document.getElementById('needsStatusDiv');
         const wantsStatusDiv = document.getElementById('wantsStatusDiv');
         const savingsDebtStatusDiv = document.getElementById('savingsDebtStatusDiv');
-        const balanceSummaryItem = document.getElementById('balanceSummaryItem'); // Get the parent div for overall balance
+        const balanceSummaryItem = document.getElementById('balanceSummaryItem');
 
 
-        let spendingCategories = []; // Will be loaded from localStorage or default
+        let spendingCategories = [];
 
-        let spendingChart; // Chart.js instance
+        let spendingChart;
 
         // Function to format currency
         const formatCurrency = (value) => `£${value.toFixed(2)}`;
@@ -443,7 +496,7 @@
 
         // Function to calculate 50/30/20 allocation
         const calculateAllocation = () => {
-            const income = parseFloat(incomeInput.value) || 0; // Use incomeInput
+            const income = parseFloat(incomeInput.value) || 0;
 
             const needs = income * 0.50;
             const wants = income * 0.30;
@@ -468,16 +521,19 @@
                     <option value="savingsDebt" ${item.type === 'savingsDebt' ? 'selected' : ''}>Savings/Debt</option>
                 `;
 
+                // Determine the value for the amount input: empty string if 0, otherwise the actual amount
+                const amountValue = (item.amount === 0) ? '' : item.amount;
+
                 row.innerHTML = `
-                    <td><input type="text" value="${item.category}" data-index="${index}" data-field="category" class="rounded-md"></td>
-                    <td><input type="text" value="${item.amount}" data-index="${index}" data-field="amount" class="rounded-md"></td>
-                    <td>
+                    <td data-label="Category"><input type="text" value="${item.category}" data-index="${index}" data-field="category" class="rounded-md"></td>
+                    <td data-label="Actual Spend (£)"><input type="text" value="${amountValue}" placeholder="0" data-index="${index}" data-field="amount" class="rounded-md"></td>
+                    <td data-label="Type">
                         <select id="${typeSelectId}" data-index="${index}" data-field="type" class="rounded-md p-2 border border-gray-300 mb-2">
                             ${typeOptionsHtml}
                         </select>
                     </td>
-                    <td>
-                        <button class="remove-row-btn rounded-md" data-index="${index}">Remove</button>
+                    <td data-label="Action">
+                        <button class="remove-row-btn rounded-md" data-index="${index}"><i class="fas fa-trash-alt"></i></button>
                     </td>
                 `;
 
@@ -503,7 +559,6 @@
 
         // Function to add a new spending category row
         const addSpendingCategoryRow = () => {
-            // Default type for new categories can be 'wants' or 'general' based on preference
             spendingCategories.push({ category: '', amount: 0, type: 'general' });
             renderSpendingCategories();
             saveCurrentState();
@@ -594,13 +649,10 @@
             if (overallBalance < 0) {
                 balanceStatusSpan.textContent = `Over by ${formatCurrency(Math.abs(overallBalance))}`;
                 balanceStatusSpan.classList.add('overspend'); // Apply red text color
-                // showAlert('You are over budget this month!', 'error'); // Removed alert
             } else {
                 balanceStatusSpan.textContent = formatCurrency(overallBalance);
                 if (overallBalance > 0) {
                     balanceStatusSpan.classList.add('underspend'); // Apply green text color
-                } else {
-                    // showAlert('You are perfectly on budget!', 'success'); // Removed alert
                 }
             }
 
@@ -638,32 +690,31 @@
                 spendingChart.data.labels = chartLabels;
                 spendingChart.data.datasets[0].data = chartData;
                 spendingChart.data.datasets[0].backgroundColor = chartColors;
-                // Set borderColor to transparent
                 spendingChart.data.datasets[0].borderColor = 'transparent';
                 spendingChart.update();
             } else {
                 const ctx = document.getElementById('spendingChart').getContext('2d');
                 spendingChart = new Chart(ctx, {
-                    type: 'bar', // Changed to bar chart
+                    type: 'bar',
                     data: {
                         labels: chartLabels,
                         datasets: [{
-                            label: 'Amount Spent (£)', // Label for the bar chart
+                            label: 'Amount Spent (£)',
                             data: chartData,
-                            backgroundColor: chartColors, // Use dynamically assigned colors
-                            borderColor: 'transparent', // Removed outline by setting to transparent
+                            backgroundColor: chartColors,
+                            borderColor: 'transparent',
                             borderWidth: 1
                         }]
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false, /* Allow manual height control */
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                display: false, // Hide legend for single dataset bar chart
+                                display: false,
                             },
                             tooltip: {
-                                intersect: false, // Make tooltip easier to activate
+                                intersect: false,
                                 callbacks: {
                                     label: function(context) {
                                         let label = context.dataset.label || '';
@@ -731,11 +782,11 @@
         };
 
         // --- Local Storage Functions ---
-        const LOCAL_STORAGE_KEY = 'budgetPlannerDataV2'; // Versioned key for future updates
+        const LOCAL_STORAGE_KEY = 'budgetPlannerDataV2';
 
         const saveCurrentState = () => {
             const dataToSave = {
-                income: incomeInput.value, // Renamed from grossPay
+                income: incomeInput.value,
                 spendingCategories: spendingCategories
             };
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
@@ -746,16 +797,14 @@
             const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
             if (savedData) {
                 const parsedData = JSON.parse(savedData);
-                incomeInput.value = parsedData.income || parsedData.takeHomePay || ''; // Handle old 'takeHomePay' for backward compatibility
+                incomeInput.value = parsedData.income || parsedData.takeHomePay || '';
                 spendingCategories = parsedData.spendingCategories || [];
-                // Ensure properties exist for older saved data and remove 'recurring' and 'linkedGoalId'
                 spendingCategories.forEach(item => {
-                    delete item.recurring; // Remove recurring property
-                    delete item.linkedGoalId; // Remove linkedGoalId property
+                    delete item.recurring;
+                    delete item.linkedGoalId;
                 });
                 console.log('Current budget data loaded from local storage.');
             } else {
-                // Default categories if no data found
                 spendingCategories = [
                     { category: 'Car', amount: 0, type: 'needs' },
                     { category: 'Groceries', amount: 0, type: 'needs' },
@@ -774,7 +823,6 @@
 
             if (userConfirmed) {
                 localStorage.removeItem(LOCAL_STORAGE_KEY);
-                // Reset application state to default categories
                 incomeInput.value = '';
                 spendingCategories = [
                     { category: 'Car', amount: 0, type: 'needs' },
@@ -787,7 +835,6 @@
                 ];
                 renderSpendingCategories();
                 updateSummary();
-                // showAlert('All data has been cleared!', 'success'); // Removed alert
             }
         };
 
@@ -795,22 +842,19 @@
         // --- Export to CSV Function ---
         const exportToCsv = () => {
             const { needs, wants, savingsDebt } = calculateAllocation();
-            const income = parseFloat(incomeInput.value) || 0; // Use incomeInput
+            const income = parseFloat(incomeInput.value) || 0;
 
             let csvContent = "data:text/csv;charset=utf-8,";
 
-            // Add Income Details
             csvContent += "Income Details\n";
-            csvContent += "Monthly Income\n"; // Updated label
-            csvContent += `${income.toFixed(2)}\n\n`; // Only income
+            csvContent += "Monthly Income\n";
+            csvContent += `${income.toFixed(2)}\n\n`;
 
-            // Add 50/30/20 Rule Allocation (Calculated) - now just a summary
             csvContent += "50/30/20 Rule Allocation (Calculated)\n";
             csvContent += `Needs (50%),${needs.toFixed(2)}\n`;
             csvContent += `Wants (30%),${wants.toFixed(2)}\n`;
             csvContent += `Savings & Debt (20%),${savingsDebt.toFixed(2)}\n\n`;
 
-            // Add Spending Categories
             csvContent += "Spending Categories\n";
             csvContent += "Category,Actual Spend,Type\n";
             spendingCategories.forEach(item => {
@@ -818,10 +862,9 @@
             });
             csvContent += "\n";
 
-            // Add Summary
             let totalActual = 0;
             spendingCategories.forEach(item => totalActual += (parseFloat(item.amount) || 0));
-            const overallBalance = income - totalActual; // Use income for balance calculation
+            const overallBalance = income - totalActual;
 
             csvContent += "Summary\n";
             csvContent += "Item,Value\n";
@@ -836,7 +879,7 @@
                 } else if (cat.category === 'Finances') {
                     itemTypeForAllocation = 'savingsDebt';
                 } else {
-                    itemTypeForAllocation = cat.type; // Fallback to assigned type if not a default category
+                    itemTypeForAllocation = cat.type;
                 }
                 return itemTypeForAllocation === 'needs';
             }).reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0).toFixed(2)}\n`;
@@ -849,7 +892,7 @@
                 } else if (cat.category === 'Finances') {
                     itemTypeForAllocation = 'savingsDebt';
                 } else {
-                    itemTypeForAllocation = cat.type; // Fallback to assigned type if not a default category
+                    itemTypeForAllocation = cat.type;
                 }
                 return itemTypeForAllocation === 'wants';
             }).reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0).toFixed(2)}\n`;
@@ -862,7 +905,7 @@
                 } else if (cat.category === 'Finances') {
                     itemTypeForAllocation = 'savingsDebt';
                 } else {
-                    itemTypeForAllocation = cat.type; // Fallback to assigned type if not a default category
+                    itemTypeForAllocation = cat.type;
                 }
                 return itemTypeForAllocation === 'savingsDebt';
             }).reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0).toFixed(2)}\n`;
@@ -872,15 +915,15 @@
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
             link.setAttribute("download", "budget_planner.csv");
-            document.body.appendChild(link); // Required for Firefox
+            document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link); // Clean up
+            document.body.removeChild(link);
         };
 
         // --- Event Listeners ---
-        incomeInput.addEventListener('input', () => { // Changed from grossPayInput and takeHomePayInput
+        incomeInput.addEventListener('input', () => {
             saveCurrentState();
-            updateSummary(); // Call updateSummary on input change
+            updateSummary();
         });
         addRowBtn.addEventListener('click', addSpendingCategoryRow);
         exportCsvBtn.addEventListener('click', exportToCsv);
@@ -896,7 +939,7 @@
                 updateSpendingData(index, field, target.value);
             }
         });
-        spendingTableBody.addEventListener('change', (event) => { // For select elements
+        spendingTableBody.addEventListener('change', (event) => {
             const target = event.target;
             const index = parseInt(target.dataset.index);
             const field = target.dataset.field;
@@ -916,9 +959,9 @@
         });
 
         // Initial load and render
-        loadCurrentState(); // Load current month's data
-        renderSpendingCategories(); // Render categories after loading
-        updateSummary(); // Update summary and chart based on loaded data
+        loadCurrentState();
+        renderSpendingCategories();
+        updateSummary();
     </script>
 </body>
 </html>
