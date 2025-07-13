@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget and Finance Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for visual spending breakdown -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Base styles for a clean, modern look, inspired by the provided image */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F0F4F8; /* Lighter, soft background from image */
+            color: #334155; /* Darker text for readability */
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 20px; /* Consistent rounded corners */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Softer, more pronounced shadow */
+            padding: 40px; /* More internal padding */
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #4C51BF; /* Deeper purple-blue for main title */
+            font-weight: 800; /* Bolder title */
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.5em;
+            letter-spacing: -0.02em;
+        }
+        h2 {
+            color: #6B7280; /* Muted gray for section titles */
+            font-weight: 700;
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 1.8em;
+        }
+        /* Input group styling */
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #4B5563; /* Slightly darker gray for labels */
+            font-size: 1.05em;
+        }
+        .input-group input[type="number"],
+        .input-group input[type="text"],
+        .input-group select {
+            width: 100%;
+            padding: 14px 18px; /* Larger padding for inputs */
+            border: 1px solid #D1D5DB; /* Lighter border */
+            border-radius: 12px; /* More rounded inputs */
+            font-size: 17px;
+            box-sizing: border-box;
+            transition: all 0.3s ease; /* Smooth transitions */
+            background-color: #F9FAFB; /* Very light background for inputs */
+            color: #334155;
+        }
+        .input-group input[type="number"]:focus,
+        .input-group input[type="text"]:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #8B5CF6; /* Purple on focus */
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2); /* Softer focus shadow */
+            background-color: #ffffff;
+        }
+        /* Section card styling */
+        .section-card {
+            background-color: #ffffff; /* White background for cards */
+            border-radius: 16px; /* Consistent rounded corners */
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06); /* Subtle card shadow */
+        }
+        .section-card h3 {
+            font-weight: 600;
+            color: #6B7280;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            text-align: center;
+        }
+        /* Allocation items */
+        .allocation-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px dashed #E5E7EB; /* Softer dashed line */
+            font-size: 1.1em;
+            color: #4B5563;
+        }
+        .allocation-item:last-child {
+            border-bottom: none;
+        }
+        .allocation-item span:first-child {
+            font-weight: 500;
+            color: #6B7280;
+        }
+        .currency-value {
+            font-weight: 700;
+            color: #4C51BF; /* Consistent with main title accent */
+        }
+        /* Table styling */
+        .spending-table {
+            width: 100%;
+            border-collapse: separate; /* Allows for border-radius on cells */
+            border-spacing: 0 10px; /* Space between rows */
+            margin-top: 25px;
+        }
+        .spending-table th, .spending-table td {
+            padding: 15px;
+            text-align: left;
+            background-color: #ffffff; /* White background for table cells */
+            border-bottom: 1px solid #E5E7EB;
+        }
+        .spending-table th {
+            background-color: #F3F4F6; /* Lighter gray for table headers */
+            font-weight: 600;
+            color: #4B5563;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .spending-table thead tr:first-child th:first-child {
+            border-top-left-radius: 10px;
+        }
+        .spending-table thead tr:first-child th:last-child {
+            border-top-right-radius: 10px;
+        }
+        .spending-table tbody tr {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03); /* Subtle shadow for rows */
+            border-radius: 10px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .spending-table tbody tr:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4-px 12px rgba(0, 0, 0, 0.08);
+        }
+        .spending-table tbody tr td:first-child {
+            border-bottom-left-radius: 10px;
+            border-top-left-radius: 10px;
+        }
+        .spending-table tbody tr td:last-child {
+            border-bottom-right-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .spending-table input[type="text"],
+        .spending-table input[type="number"],
+        .spending-table select {
+            width: calc(100% - 10px);
+            padding: 10px 12px;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            font-size: 15px;
+            box-sizing: border-box;
+            background-color: #F9FAFB;
+        }
+        /* Action buttons */
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            gap: 12px; /* Increased gap */
+            margin-top: 25px;
+        }
+        .add-row-btn, .remove-row-btn, .save-btn, .export-btn, .print-btn, .recurring-btn {
+            background-color: #8B5CF6; /* Purple for primary actions */
+            color: white;
+            padding: 12px 20px; /* Larger padding */
+            border: none;
+            border-radius: 10px; /* Consistent rounded corners */
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .add-row-btn:hover, .save-btn:hover, .export-btn:hover, .print-btn:hover, .recurring-btn:hover {
+            background-color: #7C3AED; /* Slightly darker purple on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .remove-row-btn {
+            background-color: #EF4444; /* Red for remove actions */
+            margin-left: 10px;
+            padding: 8px 12px;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .remove-row-btn:hover {
+            background-color: #DC2626;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+        }
+        /* Summary items */
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            font-size: 1.15em;
+            font-weight: 600;
+            color: #334155;
+        }
+        .summary-item.overspend {
+            color: #EF4444; /* Red for overspend */
+        }
+        .summary-item.underspend {
+            color: #10B981; /* Green for underspend */
+        }
+        .summary-item.balance {
+            border-top: 2px solid #E5E7EB; /* Softer border for balance */
+            margin-top: 20px;
+            padding-top: 20px;
+            font-size: 1.25em;
+            font-weight: 700;
+        }
+        /* New styling for summary category status */
+        .summary-category-status {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #E5E7EB;
+        }
+        .summary-category-status:first-of-type {
+            border-top: none; /* No border for the first one if it follows balance */
+            margin-top: 10px;
+            padding-top: 0;
+        }
+        .summary-category-status h3 {
+            text-align: left;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+            color: #6B7280;
+            font-weight: 700;
+        }
+
+        /* Currency styling */
+        .currency {
+            font-weight: 500;
+            color: #6B7280;
+        }
+        .currency-value {
+            font-weight: 700;
+            color: #4C51BF;
+        }
+        /* Chart specific styling */
+        .chart-container {
+            width: 100%;
+            max-width: 450px; /* Slightly larger chart */
+            margin: 25px auto;
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+            padding: 20px;
+        }
+        /* Alert messages */
+        .alert-message {
+            background-color: #FEF3C7; /* Light yellow for info/warning */
+            border: 1px solid #FCD34D;
+            color: #D97706;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        .alert-message.success {
+            background-color: #D1FAE5; /* Light green for success */
+            border-color: #34D399;
+            color: #065F46;
+        }
+        .alert-message.error {
+            background-color: #FEE2E2; /* Light red for error */
+            border-color: #F87171;
+            color: #991B1B;
+        }
+        /* Progress bar for savings goals - REMOVED, but keeping styles just in case for other elements */
+        .progress-bar-container {
+            width: 100%;
+            background-color: #E5E7EB;
+            border-radius: 10px;
+            margin-top: 15px;
+            overflow: hidden;
+            height: 25px; /* Taller progress bar */
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #10B981; /* Green for progress */
+            width: 0%;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            line-height: 25px;
+            transition: width 0.5s ease-in-out;
+            font-size: 0.9em;
+        }
+        .progress-text {
+            font-size: 0.95em;
+            color: #6B7280;
+            margin-top: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 2em;
+            }
+            h2 {
+                font-size: 1.5em;
+            }
+            .spending-table th, .spending-table td {
+                padding: 10px;
+                font-size: 0.85em;
+            }
+            .input-group input[type="number"],
+            .input-group input[type="text"],
+            .input-group select {
+                padding: 10px 12px;
+                font-size: 15px;
+            }
+            .action-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .add-row-btn, .remove-row-btn, .save-btn, .export-btn, .print-btn, .recurring-btn {
+                padding: 10px 15px;
+                font-size: 15px;
+            }
+            .remove-row-btn {
+                margin-left: 0;
+                margin-top: 5px;
+            }
+            .summary-item {
+                font-size: 1em;
+            }
+            .summary-item.balance {
+                font-size: 1.1em;
+            }
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .container, .container * {
+                visibility: visible;
+            }
+            .container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                box-shadow: none;
+                border: none;
+                margin: 0;
+                padding: 0;
+            }
+            .action-buttons, .remove-row-btn, .input-group input, .input-group select {
+                display: none;
+            }
+            .spending-table input[type="text"], .spending-table input[type="number"], .spending-table select {
+                border: none;
+                width: auto;
+                padding: 0;
+            }
+            .spending-table td {
+                padding: 5px;
+            }
+            .chart-container {
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Budget and Finance Planner</h1>
+
+        <div id="alertMessage" class="alert-message hidden"></div>
+
+        <div class="section-card">
+            <h2>Income Details</h2>
+            <div class="input-group">
+                <label for="grossPay">Monthly Gross Pay (£):</label>
+                <input type="number" id="grossPay" placeholder="e.g., 3000" min="0">
+            </div>
+            <div class="input-group">
+                <label for="takeHomePay">Monthly Take-Home Pay (£):</label>
+                <input type="number" id="takeHomePay" placeholder="e.g., 2500" min="0">
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>50/30/20 Rule Allocation (Based on Take-Home Pay)</h2>
+            <div class="allocation-item">
+                <span>50% Needs:</span>
+                <span id="allocatedNeeds" class="currency-value">£0.00</span>
+            </div>
+            <div class="allocation-item">
+                <span>30% Wants:</span>
+                <span id="allocatedWants" class="currency-value">£0.00</span>
+            </div>
+            <div class="allocation-item">
+                <span>20% Savings & Debt Repayment:</span>
+                <span id="allocatedSavingsDebt" class="currency-value">£0.00</span>
+            </div>
+            <div class="allocation-item">
+                <span>Total Allocated:</span>
+                <span id="totalAllocated" class="currency-value">£0.00</span>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>Spending Categories</h2>
+            <table class="spending-table" id="spendingTable">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Actual Spend (£)</th>
+                        <th>Status</th>
+                        <th>Type</th>
+                        <th>Recurring</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dynamic rows will be added here -->
+                </tbody>
+            </table>
+            <div class="action-buttons">
+                <button id="addRowBtn" class="add-row-btn">Add New Category</button>
+                <button id="addRecurringBtn" class="recurring-btn">Add Recurring Expenses</button>
+                <button id="saveDataBtn" class="save-btn">Save Current Month</button>
+                <button id="exportCsvBtn" class="export-btn">Export to CSV</button>
+                <button id="printBtn" class="print-btn">Print Budget</button>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>Historical Data</h2>
+            <div class="input-group">
+                <label for="monthSelect">Select Month to View:</label>
+                <select id="monthSelect" class="rounded-md p-2 border border-gray-300"></select>
+            </div>
+            <button id="loadMonthBtn" class="save-btn">Load Selected Month</button>
+        </div>
+
+        <!-- Removed Savings Goals Section -->
+
+        <div class="section-card">
+            <h2>Visual Spending Breakdown</h2>
+            <div class="chart-container">
+                <canvas id="spendingChart"></canvas>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>Summary</h2>
+            <div class="summary-item">
+                <span>Total Actual Spending:</span>
+                <span id="totalActualSpending" class="currency-value">£0.00</span>
+            </div>
+            <div class="summary-item balance">
+                <span>Remaining:</span>
+                <span id="balanceStatus" class="currency-value">£0.00</span>
+            </div>
+
+            <div class="summary-category-status">
+                <h3>Needs</h3>
+                <div class="summary-item">
+                    <span>Actual vs. Allocated:</span>
+                    <span id="needsStatus" class="currency-value">£0.00</span>
+                </div>
+            </div>
+            <div class="summary-category-status">
+                <h3>Wants</h3>
+                <div class="summary-item">
+                    <span>Actual vs. Allocated:</span>
+                    <span id="wantsStatus" class="currency-value">£0.00</span>
+                </div>
+            </div>
+            <div class="summary-category-status">
+                <h3>Savings & Debt</h3>
+                <div class="summary-item">
+                    <span>Actual vs. Allocated:</span>
+                    <span id="savingsDebtStatus" class="currency-value">£0.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const grossPayInput = document.getElementById('grossPay');
+        const takeHomePayInput = document.getElementById('takeHomePay');
+        const allocatedNeedsSpan = document.getElementById('allocatedNeeds');
+        const allocatedWantsSpan = document.getElementById('allocatedWants');
+        const allocatedSavingsDebtSpan = document.getElementById('allocatedSavingsDebt');
+        const totalAllocatedSpan = document.getElementById('totalAllocated');
+        const spendingTableBody = document.querySelector('#spendingTable tbody');
+        const addRowBtn = document.getElementById('addRowBtn');
+        const addRecurringBtn = document.getElementById('addRecurringBtn'); // New button
+        const saveDataBtn = document.getElementById('saveDataBtn');
+        const exportCsvBtn = document.getElementById('exportCsvBtn');
+        const printBtn = document.getElementById('printBtn'); // New print button
+        const totalActualSpendingSpan = document.getElementById('totalActualSpending');
+        const balanceStatusSpan = document.getElementById('balanceStatus');
+        const needsStatusSpan = document.getElementById('needsStatus');
+        const wantsStatusSpan = document.getElementById('wantsStatus');
+        const savingsDebtStatusSpan = document.getElementById('savingsDebtStatus');
+        const alertMessageDiv = document.getElementById('alertMessage'); // New alert div
+        const monthSelect = document.getElementById('monthSelect'); // Historical data select
+        const loadMonthBtn = document.getElementById('loadMonthBtn'); // Load historical button
+        // const savingsGoalsContainer = document.getElementById('savingsGoalsContainer'); // Savings goals container - REMOVED
+        // const addGoalBtn = document.getElementById('addGoalBtn'); // Add goal button - REMOVED
+
+        let spendingCategories = []; // Will be loaded from localStorage or default
+        let historicalBudgets = {}; // Stores monthly snapshots
+        // let savingsGoals = []; // Stores savings goals - REMOVED
+
+        let spendingChart; // Chart.js instance
+
+        // Function to format currency
+        const formatCurrency = (value) => `£${value.toFixed(2)}`;
+
+        // Function to display alerts
+        const showAlert = (message, type = 'warning') => {
+            alertMessageDiv.textContent = message;
+            alertMessageDiv.className = `alert-message ${type} block`;
+            setTimeout(() => {
+                alertMessageDiv.classList.add('hidden');
+            }, 5000); // Hide after 5 seconds
+        };
+
+        // Function to calculate 50/30/20 allocation
+        const calculateAllocation = () => {
+            const takeHomePay = parseFloat(takeHomePayInput.value) || 0;
+
+            const needs = takeHomePay * 0.50;
+            const wants = takeHomePay * 0.30;
+            const savingsDebt = takeHomePay * 0.20;
+            const totalAllocated = needs + wants + savingsDebt;
+
+            allocatedNeedsSpan.textContent = formatCurrency(needs);
+            allocatedWantsSpan.textContent = formatCurrency(wants);
+            allocatedSavingsDebtSpan.textContent = formatCurrency(savingsDebt);
+            totalAllocatedSpan.textContent = formatCurrency(totalAllocated);
+
+            return { needs, wants, savingsDebt, totalAllocated };
+        };
+
+        // Function to render spending categories
+        const renderSpendingCategories = () => {
+            spendingTableBody.innerHTML = ''; // Clear existing rows
+
+            spendingCategories.forEach((item, index) => {
+                const row = spendingTableBody.insertRow();
+                const typeSelectId = `type-select-${index}`; // Unique ID for type select
+                // const goalSelectId = `goal-select-${index}`; // Unique ID for goal select - REMOVED
+
+                // Options for the Type dropdown
+                const typeOptionsHtml = `
+                    <option value="needs" ${item.type === 'needs' ? 'selected' : ''}>Needs</option>
+                    <option value="wants" ${item.type === 'wants' ? 'selected' : ''}>Wants</option>
+                    <option value="savingsDebt" ${item.type === 'savingsDebt' ? 'selected' : ''}>Savings/Debt</option>
+                `;
+
+                // Options for the Goal dropdown (only if type is savingsDebt) - REMOVED
+                // let goalOptionsHtml = '<option value="">-- No Goal --</option>';
+                // if (savingsGoals.length > 0) {
+                //     goalOptionsHtml += savingsGoals.map(goal =>
+                //         `<option value="${goal.id}" ${item.linkedGoalId === goal.id ? 'selected' : ''}>${goal.name}</option>`
+                //     ).join('');
+                // }
+
+                row.innerHTML = `
+                    <td><input type="text" value="${item.category}" data-index="${index}" data-field="category" class="rounded-md"></td>
+                    <td><input type="number" value="${item.amount}" min="0" step="0.01" data-index="${index}" data-field="amount" class="rounded-md"></td>
+                    <td id="status-${index}"></td>
+                    <td>
+                        <select id="${typeSelectId}" data-index="${index}" data-field="type" class="rounded-md p-2 border border-gray-300 mb-2">
+                            ${typeOptionsHtml}
+                        </select>
+                        <!-- Removed Savings Goal Link Dropdown -->
+                    </td>
+                    <td>
+                        <input type="checkbox" data-index="${index}" data-field="recurring" ${item.recurring ? 'checked' : ''}>
+                    </td>
+                    <td>
+                        <button class="remove-row-btn rounded-md" data-index="${index}">Remove</button>
+                    </td>
+                `;
+
+                // Add event listeners for the dynamically created selects
+                row.querySelector(`#${typeSelectId}`).addEventListener('change', (e) => {
+                    updateSpendingData(index, 'type', e.target.value);
+                    // Show/hide goal link dropdown based on type - REMOVED
+                    // const goalSelect = row.querySelector(`#${goalSelectId}`);
+                    // if (e.target.value === 'savingsDebt') {
+                    //     goalSelect.classList.remove('hidden');
+                    // } else {
+                    //     goalSelect.classList.add('hidden');
+                    //     // If type changes from savingsDebt, unlink the goal
+                    //     if (item.linkedGoalId) {
+                    //         item.linkedGoalId = null; // Clear linked goal
+                    //         recalculateSavingsGoals(); // Recalculate goals
+                    //     }
+                    // }
+                });
+
+                // Removed event listener for goal select
+                // row.querySelector(`#${goalSelectId}`).addEventListener('change', (e) => {
+                //     updateSpendingData(index, 'linkedGoalId', e.target.value || null); // Store null if no goal selected
+                // });
+            });
+            updateSummary(); // Update summary after rendering
+        };
+
+        // Function to update spending category data
+        const updateSpendingData = (index, field, value) => {
+            if (field === 'amount') {
+                spendingCategories[index][field] = parseFloat(value) || 0;
+            } else if (field === 'recurring') {
+                spendingCategories[index][field] = value; // Checkbox value is boolean
+            } else if (field === 'linkedGoalId') { // This field is now effectively removed but kept for safety if old data has it
+                 spendingCategories[index][field] = null; // Always set to null
+            }
+            else {
+                spendingCategories[index][field] = value;
+            }
+            updateSummary();
+            // recalculateSavingsGoals(); // Recalculate goals after any relevant spending change - REMOVED
+            saveCurrentState(); // Save data after every change
+        };
+
+        // Function to add a new spending category row
+        const addSpendingCategoryRow = () => {
+            spendingCategories.push({ category: '', amount: 0, type: 'wants', recurring: false, linkedGoalId: null });
+            renderSpendingCategories();
+            saveCurrentState();
+        };
+
+        // Function to add recurring expenses for the current month
+        const addRecurringExpenses = () => {
+            const currentCategories = new Set(spendingCategories.map(c => c.category.toLowerCase()));
+            let addedCount = 0;
+            const newRecurring = [];
+
+            // Filter out recurring items that are NOT already in the current list
+            const recurringItemsFromLocalStorage = JSON.parse(localStorage.getItem('recurringExpenses')) || [];
+            recurringItemsFromLocalStorage.forEach(item => {
+                if (!currentCategories.has(item.category.toLowerCase())) {
+                    newRecurring.push({ ...item, amount: 0, linkedGoalId: null }); // Ensure linkedGoalId is null
+                    addedCount++;
+                }
+            });
+
+            if (addedCount > 0) {
+                spendingCategories.push(...newRecurring);
+                renderSpendingCategories();
+                saveCurrentState();
+                showAlert(`${addedCount} recurring expense(s) added. Please fill in the amounts.`, 'success');
+            } else {
+                showAlert('No new recurring expenses to add or all are already present.', 'info');
+            }
+        };
+
+        // Function to remove a spending category row
+        const removeSpendingCategoryRow = (indexToRemove) => {
+            spendingCategories.splice(indexToRemove, 1);
+            renderSpendingCategories(); // Re-render to update indices
+            // recalculateSavingsGoals(); // Recalculate goals after removing a spending item - REMOVED
+            saveCurrentState();
+        };
+
+        // Function to update the summary section and charts
+        const updateSummary = () => {
+            const { needs, wants, savingsDebt, totalAllocated } = calculateAllocation();
+
+            let totalActual = 0;
+            let actualNeeds = 0;
+            let actualWants = 0;
+            let actualSavingsDebt = 0;
+
+            const chartLabels = [];
+            const chartData = [];
+            const chartColors = [];
+
+            // Define a consistent color palette for chart based on Material You feel
+            const materialColors = {
+                needs: '#60A5FA', /* Blue-500 */
+                wants: '#FCD34D', /* Amber-400 */
+                savingsDebt: '#34D399', /* Emerald-400 */
+                other: '#9CA3AF' /* Gray-400 */
+            };
+
+            spendingCategories.forEach(item => {
+                const amount = parseFloat(item.amount) || 0;
+                totalActual += amount;
+                if (item.type === 'needs') {
+                    actualNeeds += amount;
+                } else if (item.type === 'wants') {
+                    actualWants += amount;
+                } else if (item.type === 'savingsDebt') {
+                    actualSavingsDebt += amount;
+                }
+
+                if (amount > 0) {
+                    chartLabels.push(item.category);
+                    chartData.push(amount);
+                    // Assign colors based on type for consistency
+                    chartColors.push(materialColors[item.type] || materialColors.other);
+                }
+            });
+
+            totalActualSpendingSpan.textContent = formatCurrency(totalActual);
+
+            const overallBalance = totalAllocated - totalActual;
+            // Modified: Display "Over by" if balance is negative
+            if (overallBalance < 0) {
+                balanceStatusSpan.textContent = `Over by ${formatCurrency(Math.abs(overallBalance))}`;
+                balanceStatusSpan.classList.add('overspend');
+                showAlert('You are over budget this month!', 'error');
+            } else {
+                balanceStatusSpan.textContent = formatCurrency(overallBalance);
+                balanceStatusSpan.classList.remove('overspend'); // Ensure overspend class is removed if balance is positive
+                if (overallBalance > 0) {
+                    balanceStatusSpan.classList.add('underspend');
+                } else {
+                    balanceStatusSpan.classList.remove('underspend'); // Remove if exactly on budget
+                    showAlert('You are perfectly on budget!', 'success');
+                }
+            }
+
+
+            // Update status for each category type
+            const updateCategoryStatus = (allocated, actual, statusSpan, isSavings = false) => {
+                const diff = allocated - actual;
+                statusSpan.textContent = `£${actual.toFixed(2)} (${diff >= 0 ? 'Under' : 'Over'} by ${formatCurrency(Math.abs(diff))})`;
+                statusSpan.classList.remove('overspend', 'underspend');
+
+                if (isSavings) {
+                    if (diff > 0) { // Actual < Allocated (undersaved) -> Red
+                        statusSpan.classList.add('overspend');
+                    } else if (diff < 0) { // Actual > Allocated (oversaved) -> Green
+                        statusSpan.classList.add('underspend');
+                    }
+                } else { // For Needs and Wants
+                    if (diff < 0) { // Actual > Allocated (overspent) -> Red
+                        statusSpan.classList.add('overspend');
+                    } else if (diff > 0) { // Actual < Allocated (underspent) -> Green
+                        statusSpan.classList.add('underspend');
+                    }
+                }
+            };
+
+            updateCategoryStatus(needs, actualNeeds, needsStatusSpan, false); // Not savings
+            updateCategoryStatus(wants, actualWants, wantsStatusSpan, false); // Not savings
+            updateCategoryStatus(savingsDebt, actualSavingsDebt, savingsDebtStatusSpan, true); // Is savings
+
+            // Update individual item status (overspend/underspend)
+            spendingCategories.forEach((item, index) => {
+                const statusCell = document.getElementById(`status-${index}`);
+                if (statusCell) {
+                    statusCell.textContent = ''; // Clear individual item status for now to avoid confusion
+                }
+            });
+
+            // Update Chart
+            if (spendingChart) {
+                spendingChart.data.labels = chartLabels;
+                spendingChart.data.datasets[0].data = chartData;
+                spendingChart.data.datasets[0].backgroundColor = chartColors;
+                spendingChart.update();
+            } else {
+                const ctx = document.getElementById('spendingChart').getContext('2d');
+                spendingChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: chartLabels,
+                        datasets: [{
+                            data: chartData,
+                            backgroundColor: chartColors,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    font: {
+                                        family: 'Inter'
+                                    },
+                                    color: '#334155'
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            // Calculate percentage
+                                            const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                                            const percentage = (context.parsed / total * 100).toFixed(2); // Formats to two decimal places
+                                            label += formatCurrency(context.parsed) + ` (${percentage}%)`;
+                                        }
+                                        return label;
+                                    }
+                                },
+                                titleFont: {
+                                    family: 'Inter'
+                                },
+                                bodyFont: {
+                                    family: 'Inter'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            // updateSavingsGoalsDisplay() is now called by recalculateSavingsGoals - REMOVED
+        };
+
+        // --- Local Storage Functions ---
+        const LOCAL_STORAGE_KEY = 'budgetPlannerDataV2'; // Versioned key for future updates
+        const RECURRING_EXPENSES_KEY = 'recurringExpenses';
+        const HISTORICAL_BUDGETS_KEY = 'historicalBudgets';
+        // const SAVINGS_GOALS_KEY = 'savingsGoals'; // REMOVED
+
+        const saveCurrentState = () => {
+            const dataToSave = {
+                grossPay: grossPayInput.value,
+                takeHomePay: takeHomePayInput.value,
+                spendingCategories: spendingCategories
+            };
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
+            console.log('Current budget data saved to local storage.');
+
+            // Also save recurring items separately
+            const recurringItems = spendingCategories.filter(item => item.recurring);
+            localStorage.setItem(RECURRING_EXPENSES_KEY, JSON.stringify(recurringItems));
+        };
+
+        const loadCurrentState = () => {
+            const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedData) {
+                const parsedData = JSON.parse(savedData);
+                grossPayInput.value = parsedData.grossPay || '';
+                takeHomePayInput.value = parsedData.takeHomePay || '';
+                spendingCategories = parsedData.spendingCategories || [];
+                // Ensure recurring and linkedGoalId properties exist for older saved data
+                spendingCategories.forEach(item => {
+                    if (typeof item.recurring === 'undefined') {
+                        item.recurring = false;
+                    }
+                    if (typeof item.linkedGoalId === 'undefined') {
+                        item.linkedGoalId = null; // Ensure linkedGoalId is null as feature is removed
+                    }
+                });
+                console.log('Current budget data loaded from local storage.');
+            } else {
+                // Default categories if no data found
+                spendingCategories = [
+                    { category: 'Rent/Mortgage', amount: 0, type: 'needs', recurring: true, linkedGoalId: null },
+                    { category: 'Utilities', amount: 0, type: 'needs', recurring: true, linkedGoalId: null },
+                    { category: 'Groceries', amount: 0, type: 'needs', recurring: false, linkedGoalId: null },
+                    { category: 'Transport', amount: 0, type: 'needs', recurring: false, linkedGoalId: null },
+                    { category: 'Phone/Internet', amount: 0, type: 'needs', recurring: true, linkedGoalId: null },
+                    { category: 'Eating Out', amount: 0, type: 'wants', recurring: false, linkedGoalId: null },
+                    { category: 'Entertainment', amount: 0, type: 'wants', recurring: false, linkedGoalId: null },
+                    { category: 'Shopping', amount: 0, type: 'wants', recurring: false, linkedGoalId: null },
+                    { category: 'Hobbies', amount: 0, type: 'wants', recurring: false, linkedGoalId: null },
+                    { category: 'Savings', amount: 0, type: 'savingsDebt', recurring: false, linkedGoalId: null },
+                    { category: 'Debt Repayment', amount: 0, type: 'savingsDebt', recurring: false, linkedGoalId: null }
+                ];
+            }
+        };
+
+        const saveHistoricalMonth = () => {
+            const currentMonthYear = new Date().toLocaleString('en-GB', { month: 'long', year: 'numeric' });
+            historicalBudgets[currentMonthYear] = {
+                grossPay: grossPayInput.value,
+                takeHomePay: takeHomePayInput.value,
+                spendingCategories: JSON.parse(JSON.stringify(spendingCategories)) // Deep copy
+            };
+            localStorage.setItem(HISTORICAL_BUDGETS_KEY, JSON.stringify(historicalBudgets));
+            updateMonthSelect();
+            showAlert(`Budget for ${currentMonthYear} saved!`, 'success');
+        };
+
+        const loadHistoricalData = () => {
+            const savedHistorical = localStorage.getItem(HISTORICAL_BUDGETS_KEY);
+            if (savedHistorical) {
+                historicalBudgets = JSON.parse(savedHistorical);
+            }
+            updateMonthSelect();
+        };
+
+        const updateMonthSelect = () => {
+            monthSelect.innerHTML = '';
+            const sortedMonths = Object.keys(historicalBudgets).sort((a, b) => {
+                const dateA = new Date(a);
+                const dateB = new Date(b);
+                return dateB - dateA; // Newest first
+            });
+
+            if (sortedMonths.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No saved months';
+                monthSelect.appendChild(option);
+                loadMonthBtn.disabled = true;
+            } else {
+                loadMonthBtn.disabled = false;
+                sortedMonths.forEach(month => {
+                    const option = document.createElement('option');
+                    option.value = month;
+                    option.textContent = month;
+                    monthSelect.appendChild(option);
+                });
+            }
+        };
+
+        const applyHistoricalData = () => {
+            const selectedMonth = monthSelect.value;
+            if (selectedMonth && historicalBudgets[selectedMonth]) {
+                const data = historicalBudgets[selectedMonth];
+                grossPayInput.value = data.grossPay;
+                takeHomePayInput.value = data.takeHomePay;
+                spendingCategories = JSON.parse(JSON.stringify(data.spendingCategories)); // Deep copy
+                renderSpendingCategories();
+                updateSummary();
+                // recalculateSavingsGoals(); // Recalculate goals after loading historical data - REMOVED
+                showAlert(`Loaded budget for ${selectedMonth}.`, 'info');
+            } else {
+                showAlert('Please select a month to load.', 'warning');
+            }
+        };
+
+        // --- Savings Goals Functions --- REMOVED
+        // const saveGoals = () => {
+        //     localStorage.setItem(SAVINGS_GOALS_KEY, JSON.stringify(savingsGoals));
+        //     console.log('Savings goals saved.');
+        // };
+
+        // const loadGoals = () => {
+        //     const savedGoals = localStorage.getItem(SAVINGS_GOALS_KEY);
+        //     if (savedGoals) {
+        //         savingsGoals = JSON.parse(savedGoals);
+        //         // Ensure unique IDs and new properties for older goals if they don't have them
+        //         savingsGoals.forEach(goal => {
+        //             if (!goal.id) {
+        //                 goal.id = Date.now().toString() + Math.random().toString(36).substring(2, 9); // Add a unique ID
+        //             }
+        //             if (typeof goal.manualContribution === 'undefined') {
+        //                 goal.manualContribution = goal.currentAmount || 0; // Migrate old currentAmount to manualContribution
+        //             }
+        //             if (typeof goal.actualAchieved === 'undefined') {
+        //                 goal.actualAchieved = 0; // Will be calculated by recalculateSavingsGoals
+        //             }
+        //             // Remove old 'currentAmount' if it exists to avoid confusion
+        //             delete goal.currentAmount;
+        //         });
+        //     }
+        // };
+
+        // // Function to update a single goal's display (progress bar and text) without re-rendering the whole container
+        // const updateSingleGoalDisplay = (goalId) => {
+        //     const goalIndex = savingsGoals.findIndex(g => g.id === goalId);
+        //     if (goalIndex === -1) return;
+
+        //     const goal = savingsGoals[goalIndex];
+        //     const goalDiv = document.getElementById(`goal-div-${goal.id}`); // Use unique ID for div
+        //     if (goalDiv) {
+        //         const actualAchieved = parseFloat(goal.actualAchieved) || 0;
+        //         const targetAmount = parseFloat(goal.targetAmount) || 0;
+        //         const progressPercentage = targetAmount > 0 ? (actualAchieved / targetAmount) * 100 : 0;
+
+        //         const progressBar = goalDiv.querySelector('.progress-bar');
+        //         const progressText = goalDiv.querySelector('.progress-text');
+        //         const manualContributionInput = goalDiv.querySelector('input[data-field="manualContribution"]');
+
+
+        //         if (progressBar) {
+        //             progressBar.style.width = `${progressPercentage > 100 ? 100 : progressPercentage}%`;
+        //             progressBar.textContent = `${progressPercentage.toFixed(0)}%`;
+        //         }
+        //         if (progressText) {
+        //             progressText.textContent = `${formatCurrency(actualAchieved)} / ${formatCurrency(targetAmount)}`;
+        //         }
+        //         if (manualContributionInput) {
+        //             manualContributionInput.value = goal.manualContribution.toFixed(2); // Keep input value updated
+        //         }
+        //     }
+        // };
+
+
+        // const renderSavingsGoals = () => {
+        //     savingsGoalsContainer.innerHTML = '';
+        //     if (savingsGoals.length === 0) {
+        //         savingsGoalsContainer.innerHTML = '<p class="text-gray-500 text-center">No savings goals added yet. Click "Add New Goal" to get started!</p>';
+        //     }
+        //     savingsGoals.forEach((goal) => {
+        //         const goalDiv = document.createElement('div');
+        //         goalDiv.className = 'mb-4 p-4 border border-gray-200 rounded-lg bg-white shadow-sm';
+        //         goalDiv.id = `goal-div-${goal.id}`; // Unique ID for the goal's container div
+
+        //         const actualAchieved = parseFloat(goal.actualAchieved) || 0;
+        //         const targetAmount = parseFloat(goal.targetAmount) || 0;
+        //         const progressPercentage = targetAmount > 0 ? (actualAchieved / targetAmount) * 100 : 0;
+
+        //         goalDiv.innerHTML = `
+        //             <div class="flex justify-between items-center mb-3">
+        //                 <input type="text" value="${goal.name}" data-id="${goal.id}" data-field="name" placeholder="Goal Name" class="font-semibold text-lg rounded-md p-2 w-2/3 border border-gray-300">
+        //                 <button class="remove-goal-btn text-red-500 hover:text-red-700 text-sm p-2 rounded-md" data-id="${goal.id}">Remove</button>
+        //             </div>
+        //             <div class="input-group flex gap-3">
+        //                 <label class="w-1/2 text-sm text-gray-600">Manual Contribution (£): <input type="number" value="${goal.manualContribution}" min="0" step="0.01" data-id="${goal.id}" data-field="manualContribution" class="rounded-md"></label>
+        //                 <label class="w-1/2 text-sm text-gray-600">Target (£): <input type="number" value="${targetAmount}" min="0" step="0.01" data-id="${goal.id}" data-field="targetAmount" class="rounded-md"></label>
+        //             </div>
+        //             <div class="progress-bar-container">
+        //                 <div class="progress-bar" style="width: ${progressPercentage > 100 ? 100 : progressPercentage}%;">
+        //                     ${progressPercentage.toFixed(0)}%
+        //                 </div>
+        //             </div>
+        //             <div class="progress-text">
+        //                 ${formatCurrency(actualAchieved)} / ${formatCurrency(targetAmount)}
+        //             </div>
+        //         `;
+        //         savingsGoalsContainer.appendChild(goalDiv);
+        //     });
+        //     // After rendering goals, re-render spending categories to update goal dropdowns
+        //     renderSpendingCategories();
+        // };
+
+        // const addSavingsGoal = () => {
+        //     // Generate a more robust unique ID for the goal
+        //     const newGoalId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
+        //     savingsGoals.push({ id: newGoalId, name: 'New Goal', manualContribution: 0, targetAmount: 0, actualAchieved: 0 });
+        //     renderSavingsGoals(); // Re-render all goals to add the new one and update spending category dropdowns
+        //     saveGoals();
+        // };
+
+        // const updateSavingsGoalData = (goalId, field, value) => {
+        //     const goalIndex = savingsGoals.findIndex(g => g.id === goalId);
+        //     if (goalIndex === -1) return;
+
+        //     if (field === 'manualContribution' || field === 'targetAmount') {
+        //         savingsGoals[goalIndex][field] = parseFloat(value) || 0;
+        //     } else { // For 'name' field
+        //         savingsGoals[goalIndex][field] = value;
+        //     }
+        //     recalculateSavingsGoals(); // Recalculate all goals after any change to a goal
+        //     saveGoals();
+        // };
+
+        // const removeSavingsGoal = (goalIdToRemove) => {
+        //     // Find the index of the goal to remove
+        //     const indexToRemove = savingsGoals.findIndex(g => g.id === goalIdToRemove);
+        //     if (indexToRemove === -1) return;
+
+        //     // Remove the goal
+        //     savingsGoals.splice(indexToRemove, 1);
+
+        //     // Unlink any spending categories that were linked to this goal
+        //     spendingCategories.forEach(item => {
+        //         if (item.linkedGoalId === goalIdToRemove) {
+        //             item.linkedGoalId = null;
+        //         }
+        //     });
+
+        //     renderSavingsGoals(); // Full re-render needed after removal to update indices and dropdowns
+        //     recalculateSavingsGoals(); // Recalculate all goals as a linked one might have been removed
+        //     saveGoals();
+        //     saveCurrentState(); // Save spending categories after unlinking
+        // };
+
+        // // This function calculates the actual achieved amount for all goals based on manual contribution and linked spending
+        // const recalculateSavingsGoals = () => {
+        //     // First, reset all actualAchieved amounts to their manual contribution
+        //     savingsGoals.forEach(goal => {
+        //         goal.actualAchieved = parseFloat(goal.manualContribution) || 0;
+        //     });
+
+        //     // Then, sum up contributions from spending categories
+        //     spendingCategories.forEach(item => {
+        //         if (item.type === 'savingsDebt' && item.linkedGoalId) {
+        //             const goal = savingsGoals.find(g => g.id === item.linkedGoalId);
+        //             if (goal) {
+        //                 goal.actualAchieved += (parseFloat(item.amount) || 0);
+        //             }
+        //         }
+        //     });
+
+        //     // Update the display for each goal individually
+        //     savingsGoals.forEach(goal => updateSingleGoalDisplay(goal.id));
+        //     saveGoals(); // Save the updated goals
+        // };
+
+
+        // --- Export to CSV Function ---
+        const exportToCsv = () => {
+            const { needs, wants, savingsDebt } = calculateAllocation();
+            const takeHomePay = parseFloat(takeHomePayInput.value) || 0;
+            const grossPay = parseFloat(grossPayInput.value) || 0;
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+
+            // Add Income Details
+            csvContent += "Income Details\n";
+            csvContent += "Monthly Gross Pay,Monthly Take-Home Pay\n";
+            csvContent += `${grossPay.toFixed(2)},${takeHomePay.toFixed(2)}\n\n`;
+
+            // Add 50/30/20 Allocation
+            csvContent += "50/30/20 Rule Allocation\n";
+            csvContent += "Category,Allocated Amount\n";
+            csvContent += `Needs (50%),${needs.toFixed(2)}\n`;
+            csvContent += `Wants (30%),${wants.toFixed(2)}\n`;
+            csvContent += `Savings & Debt (20%),${savingsDebt.toFixed(2)}\n\n`;
+
+            // Add Spending Categories
+            csvContent += "Spending Categories\n";
+            csvContent += "Category,Actual Spend,Type,Recurring\n"; // Removed Linked Goal ID
+            spendingCategories.forEach(item => {
+                csvContent += `${item.category},${item.amount.toFixed(2)},${item.type},${item.recurring ? 'Yes' : 'No'}\n`;
+            });
+            csvContent += "\n";
+
+            // Add Savings Goals - REMOVED
+            // csvContent += "Savings Goals\n";
+            // csvContent += "Goal ID,Goal Name,Manual Contribution,Target Amount,Actual Achieved\n"; // Updated headers
+            // savingsGoals.forEach(goal => {
+            //     csvContent += `${goal.id},${goal.name},${goal.manualContribution.toFixed(2)},${goal.targetAmount.toFixed(2)},${goal.actualAchieved.toFixed(2)}\n`;
+            // });
+            // csvContent += "\n";
+
+            // Add Summary
+            let totalActual = 0;
+            spendingCategories.forEach(item => totalActual += (parseFloat(item.amount) || 0));
+            const overallBalance = takeHomePay - totalActual;
+
+            csvContent += "Summary\n";
+            csvContent += "Item,Value\n";
+            csvContent += `Total Actual Spending,${totalActual.toFixed(2)}\n`;
+            csvContent += `Remaining/Overspent,${overallBalance.toFixed(2)}\n`;
+            csvContent += `Needs Actual,${spendingCategories.filter(cat => cat.type === 'needs').reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0).toFixed(2)}\n`;
+            csvContent += `Wants Actual,${spendingCategories.filter(cat => cat.type === 'wants').reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0).toFixed(2)}\n`;
+            csvContent += `Savings & Debt Actual,${spendingCategories.filter(cat => cat.type === 'savingsDebt').reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0).toFixed(2)}\n`;
+
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "budget_planner.csv");
+            document.body.appendChild(link); // Required for Firefox
+            link.click();
+            document.body.removeChild(link); // Clean up
+        };
+
+        // --- Event Listeners ---
+        grossPayInput.addEventListener('input', saveCurrentState);
+        takeHomePayInput.addEventListener('input', saveCurrentState);
+        addRowBtn.addEventListener('click', addSpendingCategoryRow);
+        addRecurringBtn.addEventListener('click', addRecurringExpenses); // Recurring expenses button
+        saveDataBtn.addEventListener('click', saveHistoricalMonth); // Save current month button
+        exportCsvBtn.addEventListener('click', exportToCsv);
+        printBtn.addEventListener('click', () => window.print()); // Print button
+        loadMonthBtn.addEventListener('click', applyHistoricalData); // Load historical data button
+        // addGoalBtn.addEventListener('click', addSavingsGoal); // Add goal button - REMOVED
+
+        // Event delegation for dynamically added spending rows
+        spendingTableBody.addEventListener('input', (event) => {
+            const target = event.target;
+            const index = parseInt(target.dataset.index);
+            const field = target.dataset.field;
+            if (!isNaN(index) && field) {
+                if (target.type === 'checkbox') {
+                    updateSpendingData(index, field, target.checked);
+                } else {
+                    updateSpendingData(index, field, target.value);
+                }
+            }
+        });
+        spendingTableBody.addEventListener('change', (event) => { // For select elements
+            const target = event.target;
+            const index = parseInt(target.dataset.index);
+            const field = target.dataset.field;
+            if (!isNaN(index) && field) {
+                updateSpendingData(index, field, target.value);
+            }
+        });
+
+        spendingTableBody.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target.classList.contains('remove-row-btn')) {
+                const index = parseInt(target.dataset.index);
+                if (!isNaN(index)) {
+                    removeSpendingCategoryRow(index);
+                }
+            }
+        });
+
+        // Event delegation for dynamically added savings goal inputs - REMOVED
+        // savingsGoalsContainer.addEventListener('input', (event) => {
+        //     const target = event.target;
+        //     const goalId = target.dataset.id;
+        //     const field = target.dataset.field;
+        //     if (goalId && field) {
+        //         // For 'name' field, update directly as it's a text input
+        //         if (field === 'name') {
+        //             const goalIndex = savingsGoals.findIndex(g => g.id === goalId);
+        //             if (goalIndex !== -1) {
+        //                 savingsGoals[goalIndex][field] = target.value;
+        //                 saveGoals();
+        //                 renderSpendingCategories(); // Re-render spending categories to update goal dropdowns
+        //             }
+        //         } else if (field === 'manualContribution' || field === 'targetAmount') {
+        //             // For manual contribution or target amount, update and then recalculate
+        //             updateSavingsGoalData(goalId, field, target.value);
+        //         }
+        //     }
+        // });
+
+        // savingsGoalsContainer.addEventListener('change', (event) => {
+        //     const target = event.target;
+        //     const goalId = target.dataset.id;
+        //     const field = target.dataset.field;
+        //     if (goalId && field) {
+        //         // Only update and re-render progress for amount fields on 'change'
+        //         if (field === 'manualContribution' || field === 'targetAmount') {
+        //             updateSavingsGoalData(goalId, field, target.value);
+        //         }
+        //     }
+        // });
+
+
+        // savingsGoalsContainer.addEventListener('click', (event) => {
+        //     const target = event.target;
+        //     if (target.classList.contains('remove-goal-btn')) {
+        //         const goalId = target.dataset.id;
+        //         if (goalId) {
+        //             removeSavingsGoal(goalId);
+        //         }
+        //     }
+        // });
+
+        // Initial load and render
+        loadCurrentState(); // Load current month's data
+        loadHistoricalData(); // Load historical months
+        // loadGoals(); // Load savings goals - REMOVED
+        renderSpendingCategories(); // Render categories after loading
+        // renderSavingsGoals(); // Render savings goals - REMOVED
+        updateSummary(); // Update summary and chart based on loaded data
+        // recalculateSavingsGoals(); // Initial recalculation of goals based on loaded spending data - REMOVED
+    </script>
+</body>
+</html>
