@@ -166,7 +166,7 @@
         .action-buttons {
             display: flex;
             flex-wrap: wrap;
-            justify-content: flex-start;
+            justify-content: center; /* Changed from flex-start to center */
             gap: 12px; /* Increased gap */
             margin-top: 25px;
         }
@@ -213,108 +213,39 @@
             font-size: 1.15em;
             font-weight: 600;
             color: #334155;
+            transition: color 0.3s ease; /* Only transition color */
         }
-        .summary-item.overspend {
-            color: #EF4444; /* Red for overspend */
-        }
-        .summary-item.underspend {
-            color: #10B981; /* Green for underspend */
-        }
+        /* Specific rules for the main balance summary item */
         .summary-item.balance {
             border-top: 2px solid #E5E7EB; /* Softer border for balance */
             margin-top: 20px;
             padding-top: 20px;
             font-size: 1.25em;
             font-weight: 700;
+            /* Ensure no background color is set here */
         }
-        /* New styling for summary category status */
-        .summary-category-status {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px dashed #E5E7EB;
+        /* Text color for the main balance based on status */
+        .summary-item.balance .currency-value.overspend {
+            color: #EF4444; /* Red text for overspend */
         }
-        .summary-category-status:first-of-type {
-            border-top: none; /* No border for the first one if it follows balance */
-            margin-top: 10px;
-            padding-top: 0;
-        }
-        .summary-category-status h3 {
-            text-align: left;
-            margin-bottom: 10px;
-            font-size: 1.2em;
-            color: #6B7280;
-            font-weight: 700;
+        .summary-item.balance .currency-value.underspend {
+            color: #10B981; /* Green text for underspend */
         }
 
-        /* Currency styling */
-        .currency {
-            font-weight: 500;
-            color: #6B7280;
+
+        /* New background colors for summary status boxes (Needs, Wants, Savings & Debt) */
+        .status-box.overspend {
+            background-color: #FEE2E2; /* Light red background */
         }
-        .currency-value {
-            font-weight: 700;
-            color: #4C51BF;
+        .status-box.underspend {
+            background-color: #D1FAE5; /* Light green background */
         }
-        /* Chart specific styling */
-        .chart-container {
-            width: 100%;
-            max-width: 450px; /* Slightly larger chart */
-            margin: 25px auto;
-            background-color: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
-            padding: 20px;
+        /* Ensure text color within status boxes remains default */
+        .status-box h3, .status-box .currency-value {
+            color: inherit; /* Inherit color from parent or default */
         }
-        /* Alert messages */
-        .alert-message {
-            background-color: #FEF3C7; /* Light yellow for info/warning */
-            border: 1px solid #FCD34D;
-            color: #D97706;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            text-align: center;
-            font-weight: 500;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-        .alert-message.success {
-            background-color: #D1FAE5; /* Light green for success */
-            border-color: #34D399;
-            color: #065F46;
-        }
-        .alert-message.error {
-            background-color: #FEE2E2; /* Light red for error */
-            border-color: #F87171;
-            color: #991B1B;
-        }
-        /* Progress bar for savings goals - REMOVED, but keeping styles just in case for other elements */
-        .progress-bar-container {
-            width: 100%;
-            background-color: #E5E7EB;
-            border-radius: 10px;
-            margin-top: 15px;
-            overflow: hidden;
-            height: 25px; /* Taller progress bar */
-        }
-        .progress-bar {
-            height: 100%;
-            background-color: #10B981; /* Green for progress */
-            width: 0%;
-            border-radius: 10px;
-            text-align: center;
-            color: white;
-            font-weight: bold;
-            line-height: 25px;
-            transition: width 0.5s ease-in-out;
-            font-size: 0.9em;
-        }
-        .progress-text {
-            font-size: 0.95em;
-            color: #6B7280;
-            margin-top: 8px;
-            text-align: center;
-            font-weight: 500;
-        }
+
+
         /* Responsive adjustments */
         @media (max-width: 600px) {
             .container {
@@ -398,32 +329,8 @@
         <div class="section-card">
             <h2>Income Details</h2>
             <div class="input-group">
-                <label for="grossPay">Monthly Gross Pay (£):</label>
-                <input type="number" id="grossPay" placeholder="e.g., 3000" min="0">
-            </div>
-            <div class="input-group">
-                <label for="takeHomePay">Monthly Take-Home Pay (£):</label>
-                <input type="number" id="takeHomePay" placeholder="e.g., 2500" min="0">
-            </div>
-        </div>
-
-        <div class="section-card">
-            <h2>50/30/20 Rule Allocation (Based on Take-Home Pay)</h2>
-            <div class="allocation-item">
-                <span>50% Needs:</span>
-                <span id="allocatedNeeds" class="currency-value">£0.00</span>
-            </div>
-            <div class="allocation-item">
-                <span>30% Wants:</span>
-                <span id="allocatedWants" class="currency-value">£0.00</span>
-            </div>
-            <div class="allocation-item">
-                <span>20% Savings & Debt Repayment:</span>
-                <span id="allocatedSavingsDebt" class="currency-value">£0.00</span>
-            </div>
-            <div class="allocation-item">
-                <span>Total Allocated:</span>
-                <span id="totalAllocated" class="currency-value">£0.00</span>
+                <label for="incomeInput">Income (£):</label>
+                <input type="number" id="incomeInput" placeholder="e.g., 2500" min="0">
             </div>
         </div>
 
@@ -450,8 +357,6 @@
             </div>
         </div>
 
-        <!-- Historical Data Section Removed -->
-
         <div class="section-card">
             <h2>Visual Spending Breakdown</h2>
             <div class="chart-container">
@@ -461,34 +366,27 @@
 
         <div class="section-card">
             <h2>Summary</h2>
-            <div class="summary-item">
+            <div class="summary-item" id="overallSummaryItem">
                 <span>Total Actual Spending:</span>
                 <span id="totalActualSpending" class="currency-value">£0.00</span>
             </div>
-            <div class="summary-item balance">
+            <div class="summary-item balance" id="balanceSummaryItem">
                 <span>Remaining:</span>
                 <span id="balanceStatus" class="currency-value">£0.00</span>
             </div>
 
-            <div class="summary-category-status">
-                <h3>Needs</h3>
-                <div class="summary-item">
-                    <span>Actual vs. Allocated:</span>
-                    <span id="needsStatus" class="currency-value">£0.00</span>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
+                <div id="needsStatusDiv" class="text-center p-3 rounded-lg bg-gray-50 status-box">
+                    <h3 class="font-semibold text-gray-700 mb-1">Needs</h3>
+                    <span id="needsStatus" class="currency-value text-lg">£0.00</span>
                 </div>
-            </div>
-            <div class="summary-category-status">
-                <h3>Wants</h3>
-                <div class="summary-item">
-                    <span>Actual vs. Allocated:</span>
-                    <span id="wantsStatus" class="currency-value">£0.00</span>
+                <div id="wantsStatusDiv" class="text-center p-3 rounded-lg bg-gray-50 status-box">
+                    <h3 class="font-semibold text-gray-700 mb-1">Wants</h3>
+                    <span id="wantsStatus" class="currency-value text-lg">£0.00</span>
                 </div>
-            </div>
-            <div class="summary-category-status">
-                <h3>Savings & Debt</h3>
-                <div class="summary-item">
-                    <span>Actual vs. Allocated:</span>
-                    <span id="savingsDebtStatus" class="currency-value">£0.00</span>
+                <div id="savingsDebtStatusDiv" class="text-center p-3 rounded-lg bg-gray-50 status-box">
+                    <h3 class="font-semibold text-gray-700 mb-1">Savings & Debt</h3>
+                    <span id="savingsDebtStatus" class="currency-value text-lg">£0.00</span>
                 </div>
             </div>
         </div>
@@ -496,12 +394,7 @@
 
     <script>
         // Get DOM elements
-        const grossPayInput = document.getElementById('grossPay');
-        const takeHomePayInput = document.getElementById('takeHomePay');
-        const allocatedNeedsSpan = document.getElementById('allocatedNeeds');
-        const allocatedWantsSpan = document.getElementById('allocatedWants');
-        const allocatedSavingsDebtSpan = document.getElementById('allocatedSavingsDebt');
-        const totalAllocatedSpan = document.getElementById('totalAllocated');
+        const incomeInput = document.getElementById('incomeInput'); // Renamed from takeHomePayInput
         const spendingTableBody = document.querySelector('#spendingTable tbody');
         const addRowBtn = document.getElementById('addRowBtn');
         const exportCsvBtn = document.getElementById('exportCsvBtn');
@@ -513,6 +406,13 @@
         const wantsStatusSpan = document.getElementById('wantsStatus');
         const savingsDebtStatusSpan = document.getElementById('savingsDebtStatus');
         const alertMessageDiv = document.getElementById('alertMessage');
+
+        // New DOM element references for the condensed summary
+        const needsStatusDiv = document.getElementById('needsStatusDiv');
+        const wantsStatusDiv = document.getElementById('wantsStatusDiv');
+        const savingsDebtStatusDiv = document.getElementById('savingsDebtStatusDiv');
+        const balanceSummaryItem = document.getElementById('balanceSummaryItem'); // Get the parent div for overall balance
+
 
         let spendingCategories = []; // Will be loaded from localStorage or default
 
@@ -532,17 +432,12 @@
 
         // Function to calculate 50/30/20 allocation
         const calculateAllocation = () => {
-            const takeHomePay = parseFloat(takeHomePayInput.value) || 0;
+            const income = parseFloat(incomeInput.value) || 0; // Use incomeInput
 
-            const needs = takeHomePay * 0.50;
-            const wants = takeHomePay * 0.30;
-            const savingsDebt = takeHomePay * 0.20;
+            const needs = income * 0.50;
+            const wants = income * 0.30;
+            const savingsDebt = income * 0.20;
             const totalAllocated = needs + wants + savingsDebt;
-
-            allocatedNeedsSpan.textContent = formatCurrency(needs);
-            allocatedWantsSpan.textContent = formatCurrency(wants);
-            allocatedSavingsDebtSpan.textContent = formatCurrency(savingsDebt);
-            totalAllocatedSpan.textContent = formatCurrency(totalAllocated);
 
             return { needs, wants, savingsDebt, totalAllocated };
         };
@@ -597,8 +492,8 @@
 
         // Function to add a new spending category row
         const addSpendingCategoryRow = () => {
-            // Removed 'recurring' and 'linkedGoalId' from new category
-            spendingCategories.push({ category: '', amount: 0, type: 'wants' });
+            // Default type for new categories can be 'wants' or 'general' based on preference
+            spendingCategories.push({ category: '', amount: 0, type: 'general' });
             renderSpendingCategories();
             saveCurrentState();
         };
@@ -634,11 +529,24 @@
             spendingCategories.forEach(item => {
                 const amount = parseFloat(item.amount) || 0;
                 totalActual += amount;
-                if (item.type === 'needs') {
+                // Map categories to types for allocation calculation
+                let itemTypeForAllocation;
+                if (['Car', 'Groceries', 'Transport'].includes(item.category)) {
+                    itemTypeForAllocation = 'needs';
+                } else if (['Shopping', 'Subscriptions', 'General'].includes(item.category)) {
+                    itemTypeForAllocation = 'wants';
+                } else if (item.category === 'Finances') {
+                    itemTypeForAllocation = 'savingsDebt';
+                } else {
+                    itemTypeForAllocation = item.type; // Fallback to assigned type if not a default category
+                }
+
+
+                if (itemTypeForAllocation === 'needs') {
                     actualNeeds += amount;
-                } else if (item.type === 'wants') {
+                } else if (itemTypeForAllocation === 'wants') {
                     actualWants += amount;
-                } else if (item.type === 'savingsDebt') {
+                } else if (itemTypeForAllocation === 'savingsDebt') {
                     actualSavingsDebt += amount;
                 }
 
@@ -653,49 +561,51 @@
             totalActualSpendingSpan.textContent = formatCurrency(totalActual);
 
             const overallBalance = totalAllocated - totalActual;
-            // Modified: Display "Over by" if balance is negative
+            
+            // Remove existing text color classes from the balance status span
+            balanceStatusSpan.classList.remove('overspend', 'underspend');
+
             if (overallBalance < 0) {
                 balanceStatusSpan.textContent = `Over by ${formatCurrency(Math.abs(overallBalance))}`;
-                balanceStatusSpan.classList.add('overspend');
+                balanceStatusSpan.classList.add('overspend'); // Apply red text color
                 showAlert('You are over budget this month!', 'error');
             } else {
                 balanceStatusSpan.textContent = formatCurrency(overallBalance);
-                balanceStatusSpan.classList.remove('overspend'); // Ensure overspend class is removed if balance is positive
                 if (overallBalance > 0) {
-                    balanceStatusSpan.classList.add('underspend');
+                    balanceStatusSpan.classList.add('underspend'); // Apply green text color
                 } else {
-                    balanceStatusSpan.classList.remove('underspend'); // Remove if exactly on budget
                     showAlert('You are perfectly on budget!', 'success');
                 }
             }
 
 
-            // Update status for each category type
-            const updateCategoryStatus = (allocated, actual, statusSpan, isSavings = false) => {
+            // Update status for each category type for the condensed summary
+            const updateCategoryStatus = (allocated, actual, statusSpan, parentDiv, isSavings = false) => {
                 const diff = allocated - actual;
-                statusSpan.textContent = `£${actual.toFixed(2)} (${diff >= 0 ? 'Under' : 'Over'} by ${formatCurrency(Math.abs(diff))})`;
-                statusSpan.classList.remove('overspend', 'underspend');
+                statusSpan.textContent = formatCurrency(actual); // Only show actual amount
+
+                // Remove existing background classes from the parentDiv
+                parentDiv.classList.remove('overspend', 'underspend'); /* Remove old classes */
+                parentDiv.classList.add('bg-gray-50'); // Reset to default background
 
                 if (isSavings) {
-                    if (diff > 0) { // Actual < Allocated (undersaved) -> Red
-                        statusSpan.classList.add('overspend');
-                    } else if (diff < 0) { // Actual > Allocated (oversaved) -> Green
-                        statusSpan.classList.add('underspend');
+                    if (diff > 0) { // Actual < Allocated (undersaved) -> Red background
+                        parentDiv.classList.add('overspend');
+                    } else if (diff < 0) { // Actual > Allocated (oversaved) -> Green background
+                        parentDiv.classList.add('underspend');
                     }
                 } else { // For Needs and Wants
-                    if (diff < 0) { // Actual > Allocated (overspent) -> Red
-                        statusSpan.classList.add('overspend');
-                    } else if (diff > 0) { // Actual < Allocated (underspent) -> Green
-                        statusSpan.classList.add('underspend');
+                    if (diff < 0) { // Actual > Allocated (overspent) -> Red background
+                        parentDiv.classList.add('overspend');
+                    } else if (diff > 0) { // Actual < Allocated (underspent) -> Green background
+                        parentDiv.classList.add('underspend');
                     }
                 }
             };
 
-            updateCategoryStatus(needs, actualNeeds, needsStatusSpan, false); // Not savings
-            updateCategoryStatus(wants, actualWants, wantsStatusSpan, false); // Not savings
-            updateCategoryStatus(savingsDebt, actualSavingsDebt, savingsDebtStatusSpan, true); // Is savings
-
-            // Removed logic to update individual item status (overspend/underspend) as the column is removed.
+            updateCategoryStatus(needs, actualNeeds, needsStatusSpan, needsStatusDiv, false);
+            updateCategoryStatus(wants, actualWants, wantsStatusSpan, wantsStatusDiv, false);
+            updateCategoryStatus(savingsDebt, actualSavingsDebt, savingsDebtStatusSpan, savingsDebtStatusDiv, true);
         
             // Update Chart
             if (spendingChart) {
@@ -758,25 +668,21 @@
 
         // --- Local Storage Functions ---
         const LOCAL_STORAGE_KEY = 'budgetPlannerDataV2'; // Versioned key for future updates
-        // Removed RECURRING_EXPENSES_KEY and HISTORICAL_BUDGETS_KEY
 
         const saveCurrentState = () => {
             const dataToSave = {
-                grossPay: grossPayInput.value,
-                takeHomePay: takeHomePayInput.value,
+                income: incomeInput.value, // Renamed from grossPay
                 spendingCategories: spendingCategories
             };
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
             console.log('Current budget data saved to local storage.');
-            // Removed saving recurring items separately
         };
 
         const loadCurrentState = () => {
             const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
             if (savedData) {
                 const parsedData = JSON.parse(savedData);
-                grossPayInput.value = parsedData.grossPay || '';
-                takeHomePayInput.value = parsedData.takeHomePay || '';
+                incomeInput.value = parsedData.income || parsedData.takeHomePay || ''; // Handle old 'takeHomePay' for backward compatibility
                 spendingCategories = parsedData.spendingCategories || [];
                 // Ensure properties exist for older saved data and remove 'recurring' and 'linkedGoalId'
                 spendingCategories.forEach(item => {
@@ -785,24 +691,18 @@
                 });
                 console.log('Current budget data loaded from local storage.');
             } else {
-                // Default categories if no data found (removed recurring and linkedGoalId)
+                // Default categories if no data found
                 spendingCategories = [
-                    { category: 'Rent/Mortgage', amount: 0, type: 'needs' },
-                    { category: 'Utilities', amount: 0, type: 'needs' },
+                    { category: 'Car', amount: 0, type: 'needs' },
                     { category: 'Groceries', amount: 0, type: 'needs' },
                     { category: 'Transport', amount: 0, type: 'needs' },
-                    { category: 'Phone/Internet', amount: 0, type: 'needs' },
-                    { category: 'Eating Out', amount: 0, type: 'wants' },
-                    { category: 'Entertainment', amount: 0, type: 'wants' },
                     { category: 'Shopping', amount: 0, type: 'wants' },
-                    { category: 'Hobbies', amount: 0, type: 'wants' },
-                    { category: 'Savings', amount: 0, type: 'savingsDebt' },
-                    { category: 'Debt Repayment', amount: 0, type: 'savingsDebt' }
+                    { category: 'Subscriptions', amount: 0, type: 'wants' },
+                    { category: 'General', amount: 0, type: 'wants' },
+                    { category: 'Finances', amount: 0, type: 'savingsDebt' }
                 ];
             }
         };
-
-        // Removed saveHistoricalMonth, loadHistoricalData, updateMonthSelect, applyHistoricalData functions
 
         // Function to clear all local storage data for the app
         const clearAllData = () => {
@@ -810,27 +710,19 @@
 
             if (userConfirmed) {
                 localStorage.removeItem(LOCAL_STORAGE_KEY);
-                // Removed clearing of RECURRING_EXPENSES_KEY and HISTORICAL_BUDGETS_KEY
-                // Reset application state to default
-                grossPayInput.value = '';
-                takeHomePayInput.value = '';
+                // Reset application state to default categories
+                incomeInput.value = '';
                 spendingCategories = [
-                    { category: 'Rent/Mortgage', amount: 0, type: 'needs' },
-                    { category: 'Utilities', amount: 0, type: 'needs' },
+                    { category: 'Car', amount: 0, type: 'needs' },
                     { category: 'Groceries', amount: 0, type: 'needs' },
                     { category: 'Transport', amount: 0, type: 'needs' },
-                    { category: 'Phone/Internet', amount: 0, type: 'needs' },
-                    { category: 'Eating Out', amount: 0, type: 'wants' },
-                    { category: 'Entertainment', amount: 0, type: 'wants' },
                     { category: 'Shopping', amount: 0, type: 'wants' },
-                    { category: 'Hobbies', amount: 0, type: 'wants' },
-                    { category: 'Savings', amount: 0, type: 'savingsDebt' },
-                    { category: 'Debt Repayment', amount: 0, type: 'savingsDebt' }
+                    { category: 'Subscriptions', amount: 0, type: 'wants' },
+                    { category: 'General', amount: 0, type: 'wants' },
+                    { category: 'Finances', amount: 0, type: 'savingsDebt' }
                 ];
-                // Removed historicalBudgets reset
                 renderSpendingCategories();
                 updateSummary();
-                // Removed updateMonthSelect call
                 showAlert('All data has been cleared!', 'success');
             }
         };
@@ -839,26 +731,24 @@
         // --- Export to CSV Function ---
         const exportToCsv = () => {
             const { needs, wants, savingsDebt } = calculateAllocation();
-            const takeHomePay = parseFloat(takeHomePayInput.value) || 0;
-            const grossPay = parseFloat(grossPayInput.value) || 0;
+            const income = parseFloat(incomeInput.value) || 0; // Use incomeInput
 
             let csvContent = "data:text/csv;charset=utf-8,";
 
             // Add Income Details
             csvContent += "Income Details\n";
-            csvContent += "Monthly Gross Pay,Monthly Take-Home Pay\n";
-            csvContent += `${grossPay.toFixed(2)},${takeHomePay.toFixed(2)}\n\n`;
+            csvContent += "Monthly Income\n"; // Updated label
+            csvContent += `${income.toFixed(2)}\n\n`; // Only income
 
-            // Add 50/30/20 Allocation
-            csvContent += "50/30/20 Rule Allocation\n";
-            csvContent += "Category,Allocated Amount\n";
+            // Add 50/30/20 Allocation (Calculated) - now just a summary
+            csvContent += "50/30/20 Rule Allocation (Calculated)\n";
             csvContent += `Needs (50%),${needs.toFixed(2)}\n`;
             csvContent += `Wants (30%),${wants.toFixed(2)}\n`;
             csvContent += `Savings & Debt (20%),${savingsDebt.toFixed(2)}\n\n`;
 
             // Add Spending Categories
             csvContent += "Spending Categories\n";
-            csvContent += "Category,Actual Spend,Type\n"; // Removed Recurring column
+            csvContent += "Category,Actual Spend,Type\n";
             spendingCategories.forEach(item => {
                 csvContent += `${item.category},${item.amount.toFixed(2)},${item.type}\n`;
             });
@@ -867,15 +757,51 @@
             // Add Summary
             let totalActual = 0;
             spendingCategories.forEach(item => totalActual += (parseFloat(item.amount) || 0));
-            const overallBalance = takeHomePay - totalActual;
+            const overallBalance = income - totalActual; // Use income for balance calculation
 
             csvContent += "Summary\n";
             csvContent += "Item,Value\n";
             csvContent += `Total Actual Spending,${totalActual.toFixed(2)}\n`;
             csvContent += `Remaining/Overspent,${overallBalance.toFixed(2)}\n`;
-            csvContent += `Needs Actual,${spendingCategories.filter(cat => cat.type === 'needs').reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0).toFixed(2)}\n`;
-            csvContent += `Wants Actual,${spendingCategories.filter(cat => cat.type === 'wants').reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0).toFixed(2)}\n`;
-            csvContent += `Savings & Debt Actual,${spendingCategories.filter(cat => cat.type === 'savingsDebt').reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0).toFixed(2)}\n`;
+            csvContent += `Needs Actual,${spendingCategories.filter(cat => {
+                let itemTypeForAllocation;
+                if (['Car', 'Groceries', 'Transport'].includes(cat.category)) {
+                    itemTypeForAllocation = 'needs';
+                } else if (['Shopping', 'Subscriptions', 'General'].includes(cat.category)) {
+                    itemTypeForAllocation = 'wants';
+                } else if (cat.category === 'Finances') {
+                    itemTypeForAllocation = 'savingsDebt';
+                } else {
+                    itemTypeForAllocation = cat.type; // Fallback to assigned type if not a default category
+                }
+                return itemTypeForAllocation === 'needs';
+            }).reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0).toFixed(2)}\n`;
+            csvContent += `Wants Actual,${spendingCategories.filter(cat => {
+                let itemTypeForAllocation;
+                if (['Car', 'Groceries', 'Transport'].includes(cat.category)) {
+                    itemTypeForAllocation = 'needs';
+                } else if (['Shopping', 'Subscriptions', 'General'].includes(cat.category)) {
+                    itemTypeForAllocation = 'wants';
+                } else if (cat.category === 'Finances') {
+                    itemTypeForAllocation = 'savingsDebt';
+                } else {
+                    itemTypeForAllocation = cat.type; // Fallback to assigned type if not a default category
+                }
+                return itemTypeForAllocation === 'wants';
+            }).reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0).toFixed(2)}\n`;
+            csvContent += `Savings & Debt Actual,${spendingCategories.filter(cat => {
+                let itemTypeForAllocation;
+                if (['Car', 'Groceries', 'Transport'].includes(cat.category)) {
+                    itemTypeForAllocation = 'needs';
+                } else if (['Shopping', 'Subscriptions', 'General'].includes(cat.category)) {
+                    itemTypeForAllocation = 'wants';
+                } else if (cat.category === 'Finances') {
+                    itemTypeForAllocation = 'savingsDebt';
+                } else {
+                    itemTypeForAllocation = cat.type; // Fallback to assigned type if not a default category
+                }
+                return itemTypeForAllocation === 'savingsDebt';
+            }).reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0).toFixed(2)}\n`;
 
 
             const encodedUri = encodeURI(csvContent);
@@ -888,8 +814,10 @@
         };
 
         // --- Event Listeners ---
-        grossPayInput.addEventListener('input', saveCurrentState);
-        takeHomePayInput.addEventListener('input', saveCurrentState);
+        incomeInput.addEventListener('input', () => { // Changed from grossPayInput and takeHomePayInput
+            saveCurrentState();
+            updateSummary(); // Call updateSummary on input change
+        });
         addRowBtn.addEventListener('click', addSpendingCategoryRow);
         exportCsvBtn.addEventListener('click', exportToCsv);
         printBtn.addEventListener('click', () => window.print());
