@@ -318,13 +318,27 @@
                 display: block !important;
             }
         }
+        /* Chart container styling for bar chart */
+        .chart-container {
+            width: 100%;
+            max-width: 600px; /* Adjusted max-width for bar chart */
+            height: 300px; /* Set a fixed height for the bar chart */
+            margin: 25px auto;
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+            padding: 20px;
+            display: flex; /* Use flexbox to center content */
+            justify-content: center;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Budget and Finance Planner</h1>
 
-        <div id="alertMessage" class="alert-message hidden"></div>
+        <!-- Removed alertMessageDiv as it's no longer needed -->
 
         <div class="section-card">
             <h2>Income Details</h2>
@@ -405,7 +419,8 @@
         const needsStatusSpan = document.getElementById('needsStatus');
         const wantsStatusSpan = document.getElementById('wantsStatus');
         const savingsDebtStatusSpan = document.getElementById('savingsDebtStatus');
-        const alertMessageDiv = document.getElementById('alertMessage');
+        // Removed alertMessageDiv as it's no longer needed
+        // const alertMessageDiv = document.getElementById('alertMessage');
 
         // New DOM element references for the condensed summary
         const needsStatusDiv = document.getElementById('needsStatusDiv');
@@ -421,13 +436,9 @@
         // Function to format currency
         const formatCurrency = (value) => `£${value.toFixed(2)}`;
 
-        // Function to display alerts
+        // Function to display alerts (now empty as alerts are removed)
         const showAlert = (message, type = 'warning') => {
-            alertMessageDiv.textContent = message;
-            alertMessageDiv.className = `alert-message ${type} block`;
-            setTimeout(() => {
-                alertMessageDiv.classList.add('hidden');
-            }, 5000); // Hide after 5 seconds
+            // No longer displaying alerts
         };
 
         // Function to calculate 50/30/20 allocation
@@ -526,9 +537,15 @@
                 other: '#9CA3AF' /* Gray-400 */
             };
 
+            // Group spending by category for the bar chart
+            const categorySpending = {};
+            // Also keep track of the type for each category for coloring
+            const categoryTypes = {};
+
             spendingCategories.forEach(item => {
                 const amount = parseFloat(item.amount) || 0;
                 totalActual += amount;
+                
                 // Map categories to types for allocation calculation
                 let itemTypeForAllocation;
                 if (['Car', 'Groceries', 'Transport'].includes(item.category)) {
@@ -541,7 +558,6 @@
                     itemTypeForAllocation = item.type; // Fallback to assigned type if not a default category
                 }
 
-
                 if (itemTypeForAllocation === 'needs') {
                     actualNeeds += amount;
                 } else if (itemTypeForAllocation === 'wants') {
@@ -550,13 +566,23 @@
                     actualSavingsDebt += amount;
                 }
 
-                if (amount > 0) {
-                    chartLabels.push(item.category);
-                    chartData.push(amount);
-                    // Assign colors based on type for consistency
-                    chartColors.push(materialColors[item.type] || materialColors.other);
+                // For bar chart, group by category and store its type
+                if (item.category) {
+                    categorySpending[item.category] = (categorySpending[item.category] || 0) + amount;
+                    categoryTypes[item.category] = itemTypeForAllocation; // Store the type for coloring
                 }
             });
+
+            // Prepare data for bar chart
+            for (const category in categorySpending) {
+                if (categorySpending[category] > 0) {
+                    chartLabels.push(category);
+                    chartData.push(categorySpending[category]);
+                    // Assign colors based on the category's type
+                    chartColors.push(materialColors[categoryTypes[category]] || materialColors.other);
+                }
+            }
+
 
             totalActualSpendingSpan.textContent = formatCurrency(totalActual);
 
@@ -568,13 +594,13 @@
             if (overallBalance < 0) {
                 balanceStatusSpan.textContent = `Over by ${formatCurrency(Math.abs(overallBalance))}`;
                 balanceStatusSpan.classList.add('overspend'); // Apply red text color
-                showAlert('You are over budget this month!', 'error');
+                // showAlert('You are over budget this month!', 'error'); // Removed alert
             } else {
                 balanceStatusSpan.textContent = formatCurrency(overallBalance);
                 if (overallBalance > 0) {
                     balanceStatusSpan.classList.add('underspend'); // Apply green text color
                 } else {
-                    showAlert('You are perfectly on budget!', 'success');
+                    // showAlert('You are perfectly on budget!', 'success'); // Removed alert
                 }
             }
 
@@ -612,43 +638,40 @@
                 spendingChart.data.labels = chartLabels;
                 spendingChart.data.datasets[0].data = chartData;
                 spendingChart.data.datasets[0].backgroundColor = chartColors;
+                // Set borderColor to transparent
+                spendingChart.data.datasets[0].borderColor = 'transparent';
                 spendingChart.update();
             } else {
                 const ctx = document.getElementById('spendingChart').getContext('2d');
                 spendingChart = new Chart(ctx, {
-                    type: 'pie',
+                    type: 'bar', // Changed to bar chart
                     data: {
                         labels: chartLabels,
                         datasets: [{
+                            label: 'Amount Spent (£)', // Label for the bar chart
                             data: chartData,
-                            backgroundColor: chartColors,
-                            hoverOffset: 4
+                            backgroundColor: chartColors, // Use dynamically assigned colors
+                            borderColor: 'transparent', // Removed outline by setting to transparent
+                            borderWidth: 1
                         }]
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false, /* Allow manual height control */
                         plugins: {
                             legend: {
-                                position: 'top',
-                                labels: {
-                                    font: {
-                                        family: 'Inter'
-                                    },
-                                    color: '#334155'
-                                }
+                                display: false, // Hide legend for single dataset bar chart
                             },
                             tooltip: {
+                                intersect: false, // Make tooltip easier to activate
                                 callbacks: {
                                     label: function(context) {
-                                        let label = context.label || '';
+                                        let label = context.dataset.label || '';
                                         if (label) {
                                             label += ': ';
                                         }
-                                        if (context.parsed !== null) {
-                                            // Calculate percentage
-                                            const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
-                                            const percentage = (context.parsed / total * 100).toFixed(2); // Formats to two decimal places
-                                            label += formatCurrency(context.parsed) + ` (${percentage}%)`;
+                                        if (context.parsed.y !== null) {
+                                            label += formatCurrency(context.parsed.y);
                                         }
                                         return label;
                                     }
@@ -658,6 +681,47 @@
                                 },
                                 bodyFont: {
                                     family: 'Inter'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Category',
+                                    font: {
+                                        family: 'Inter',
+                                        size: 14
+                                    },
+                                    color: '#4B5563'
+                                },
+                                ticks: {
+                                    font: {
+                                        family: 'Inter'
+                                    },
+                                    color: '#6B7280'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Money Spent (£)',
+                                    font: {
+                                        family: 'Inter',
+                                        size: 14
+                                    },
+                                    color: '#4B5563'
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return formatCurrency(value);
+                                    },
+                                    font: {
+                                        family: 'Inter'
+                                    },
+                                    color: '#6B7280'
                                 }
                             }
                         }
@@ -723,7 +787,7 @@
                 ];
                 renderSpendingCategories();
                 updateSummary();
-                showAlert('All data has been cleared!', 'success');
+                // showAlert('All data has been cleared!', 'success'); // Removed alert
             }
         };
 
@@ -740,7 +804,7 @@
             csvContent += "Monthly Income\n"; // Updated label
             csvContent += `${income.toFixed(2)}\n\n`; // Only income
 
-            // Add 50/30/20 Allocation (Calculated) - now just a summary
+            // Add 50/30/20 Rule Allocation (Calculated) - now just a summary
             csvContent += "50/30/20 Rule Allocation (Calculated)\n";
             csvContent += `Needs (50%),${needs.toFixed(2)}\n`;
             csvContent += `Wants (30%),${wants.toFixed(2)}\n`;
